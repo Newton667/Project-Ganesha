@@ -4,16 +4,33 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Explore from './pages/Explore';
+import './App.css';
 
 function App() {
   return (
     <Router>
-      <Navbar />
-      <div className="content">
+      <div className="app">
         <Routes>
-          <Route path ="/" element={<Home/>}/>
-          <Route path ="/about" element={<About/>}/>
-          <Route path ="/contact" element={<Contact/>}/>
+          <Route path="/" element={<Home />} />
+          <Route path="/explore" element={
+            <>
+              <Navbar />
+              <Explore />
+            </>
+          } />
+          <Route path="/about" element={
+            <>
+              <Navbar />
+              <About />
+            </>
+          } />
+          <Route path="/contact" element={
+            <>
+              <Navbar />
+              <Contact />
+            </>
+          } />
         </Routes>
       </div>
     </Router>

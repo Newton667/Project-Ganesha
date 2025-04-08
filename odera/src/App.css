@@ -1,27 +1,16 @@
-body {
-  font-family: Arial, sans-serif;
-}
-
-nav ul {
-  list-style: none;
+* {
+  box-sizing: border-box;
+  margin: 0;
   padding: 0;
 }
 
-nav ul li {
-  display: inline;
-  margin-right: 20px;
+body {
+  font-family: 'Arial', sans-serif;
 }
 
-nav ul li a {
-  text-decoration: none;
-  color: #007bff;
-  font-size: 18px;
-}
-
-.content {
-  padding: 20px;
-}
-
-h1 {
-  color: #333;
+/* Page content styles */
+.explore-page, .about-page, .contact-page {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
 }

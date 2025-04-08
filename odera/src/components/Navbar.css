@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500;700&display=swap');
+
+.banner {
+  width: 100%;
+  height: 650px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  transform: scaleX(-1); /* This flips the banner image horizontally */
+}
+
+.navbar-container {
+  width: 100%;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  height: 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo a {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: #666666;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 3rem;
+}
+
+.nav-link {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  text-decoration: none;
+  font-size: 16px;
+  transition: color 0.3s;
+}
+
+.nav-link:hover {
+  color: #b3e6e6;
+}
+
+.join-button button {
+  background-color: #008080;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.join-button button:hover {
+  background-color: #006666;
+}
+
+/* Banner content styles */
+.banner-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: auto auto 6rem 0;
+  padding: 0 4rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.banner-content h2 {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 36px;
+  max-width: 800px;
+}
+
+.banner-join-btn {
+  background-color: #008080;
+  border: none;
+  border-radius: 4px;
+  padding: 14px 32px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.banner-join-btn:hover {
+  background-color: #006666;
+  transform: translateY(-2px);
+}
+
+.banner-join-btn:hover {
+  background-color: #006666;
+  transform: translateY(-2px);
+}

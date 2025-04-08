@@ -11,9 +11,9 @@ function App() {
       <Navbar />
       <div className="content">
         <Routes>
-          <Route exact path ="/" component={<Home />} />
-          <Route exact path ="/about" component={<About />} />
-          <Route exact path ="/contact" component={<Contact />} />
+          <Route path ="/" element={<Home/>}/>
+          <Route path ="/about" element={<About/>}/>
+          <Route path ="/contact" element={<Contact/>}/>
         </Routes>
       </div>
     </Router>

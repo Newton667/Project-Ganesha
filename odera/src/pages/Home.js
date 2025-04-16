@@ -6,10 +6,18 @@ function Home() {
   // Add class to body to help with styling
   useEffect(() => {
     document.body.classList.add('home-page');
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+    document.body.style.width = '100vw';
+    document.body.style.overflowX = 'hidden';
     
     // Cleanup function
     return () => {
       document.body.classList.remove('home-page');
+      document.body.style.margin = '';
+      document.body.style.padding = '';
+      document.body.style.width = '';
+      document.body.style.overflowX = '';
     };
   }, []);
 
@@ -43,6 +51,33 @@ function Home() {
       </div>
       
       <div className="home-content">
+        <div className="future-leaders-section">
+          <h2>Let future leaders take it from here</h2>
+          <div className="search-container">
+            <input type="text" placeholder="Search for coding services..." />
+            <button className="search-btn">Search</button>
+          </div>
+        </div>
+        
+        <div className="designed-by">
+          <h2>Designed by College Students, for College Students</h2>
+        </div>
+        
+        <section className="our-goal">
+          <div className="goal-container">
+            <div className="goal-image">
+              <img src="/pen.jpg" alt="Pen" />
+            </div>
+            <div className="goal-text">
+              <h2>Our Goal</h2>
+              <ul>
+                <li>Our goal is simple, get you some much-needed experience in the tech field before college ends</li>
+                <li>Finding employment that gives you proper experience can be hard, especially when the job market is not doing well</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        
         <section className="how-it-works">
           <h2>How It Works</h2>
           <div className="steps-container">
@@ -87,6 +122,17 @@ function Home() {
             <div className="benefit-card">
               <h3>Networking</h3>
               <p>Connect with industry professionals and expand your network.</p>
+            </div>
+          </div>
+        </section>
+        
+        {/* New freelancing CTA section with laptop image */}
+        <section className="freelancing-cta">
+          <div className="laptop-image">
+            <img src="/laptop.png" alt="Laptop" />
+            <div className="cta-content">
+              <h2>Ready to kick-start your freelancing journey?</h2>
+              <button className="cta-join-btn">Join Now</button>
             </div>
           </div>
         </section>

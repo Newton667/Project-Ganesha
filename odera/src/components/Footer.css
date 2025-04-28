@@ -1,0 +1,40 @@
+.footer {
+    padding: 2rem;
+    margin-top: 2rem;
+    border-top: 1px solid #ccc;
+}
+  
+.footer-sections {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+  
+.footer-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+  
+.footer-section ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-bottom-links {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+
+.footer-bottom-links a {
+    margin: 0 10px;
+    font-size: 0.8rem;
+    color: #666;
+    text-decoration: none;
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+  

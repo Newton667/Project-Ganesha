@@ -1,18 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import './Footer.css';
 
 function Footer() {
     return (
-        <footer style={{backgroundColor: 'f8f8f8', padding: '2rem', marginTop: '2rem', borderTop: '1px solid #ccc'}}>
-            <div style={{display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap'}}>
+        <footer className='footer'>
+            <div className='footer-sections'>
                 
-                <div>
+                <div className='logo'>
                     <h1>Odera</h1>
                 </div>
 
 
                 {/* Jobs section */}
-                <div>
+                <div className='footer-section'>
                     <h4>Jobs</h4>
                     <ul style={{listStyleType: 'none', padding: '0'}}>
                         <li><Link to="/about">Catagories</Link></li>
@@ -23,28 +24,29 @@ function Footer() {
                 </div>
 
                 {/* Contact section */}
-                <div>
+                <div className='footer-section'>
                     <h4>About</h4>
                     <ul style={{listStyleType: 'none', padding: '0'}}>
                         <li><Link to="/about">Email</Link></li>
-                        <li><Link to="/about">LinkedIn</Link></li>
+                        <li><Link to="https://www.linkedin.com/company/odera-freelancing/">LinkedIn</Link></li>
                         <li><Link to="/about">Twitter</Link></li>
                         <li><Link to="/about">Instagram</Link></li>
                     </ul>
                 </div>
 
                 {/* Example section */}
-                <div>
+                <div className='footer-section'>
                     <h4>About</h4>
                     <ul style={{listStyleType: 'none', padding: '0'}}>
-                        <li><Link to="/about">Home</Link></li>
+                        <li><Link to="/">Home</Link></li>
                         <li><Link to="/about">About Us</Link></li>
+                        <li><Link to="/contact">Contact</Link></li>
                         <li><Link to="/about">Our Mission</Link></li>
                         <li><Link to="/about">Our Partners</Link></li>
                     </ul>
                 </div>
 
-                <div>
+                <div className='footer-newsletter-section'>
                     <h4>Join our newsletter!</h4>
                     <label for="email">Email address:</label>
                     <input type="text" id="email" name="email"></input>
@@ -52,6 +54,12 @@ function Footer() {
                 </div>
 
 
+            </div>
+
+            <div className='footer-bottom-links'>
+                <Link to="/terms">Terms of Service</Link>
+                <Link to="/privacy">Privacy Policy</Link>
+                <Link to="/cookies">Cookies</Link>
             </div>
 
             <div style={{textAlign: 'center', marginTop: '2rem', fontSize: '0.9rem', color: '#666'}}>

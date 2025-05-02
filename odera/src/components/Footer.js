@@ -48,9 +48,8 @@ function Footer() {
 
                 <div className='footer-newsletter-section'>
                     <h4>Join our newsletter!</h4>
-                    <label for="email">Email address:</label>
-                    <input type="text" id="email" name="email"></input>
-                    <input type="submit" value="Submit"></input>
+                    <input type="text" id="email" name="email" placeholder='Email Address:'></input>
+                    <input type="submit" value="Submit" className='submit-btn'></input>
                 </div>
 
 

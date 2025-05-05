@@ -1,0 +1,221 @@
+/* SignUp.css */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+  }
+  
+  .signup-container {
+    display: flex;
+    min-height: 100vh;
+    color: #f5f5f5;
+    font-family: 'Roboto', sans-serif;
+  }
+  
+  .signup-content {
+    flex: 1;
+    padding: 2rem 3rem;
+    background-color: #222;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .signup-benefits {
+    flex: 1;
+    padding: 2rem;
+    background-color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  /* Header and Slogan */
+  .signup-header {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .signup-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 0.5rem 0;
+  }
+  
+  .signup-slogan {
+    font-size: 18px;
+    color: #1abc9c;
+    margin: 0;
+    font-weight: 300;
+  }
+  
+  /* Form Styling */
+  .signup-form {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #bbb;
+    font-size: 14px;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="email"],
+  .form-group input[type="password"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #333;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+  }
+  
+  .form-group input:focus {
+    border-color: #1abc9c;
+  }
+  
+  /* Role Selection */
+  .role-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .role-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  .role-option input[type="radio"] {
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: #1abc9c;
+  }
+  
+  .role-option label {
+    margin: 0;
+    cursor: pointer;
+  }
+  
+  /* Submit Button */
+  .signup-button {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #1abc9c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 0.5rem;
+  }
+  
+  .signup-button:hover {
+    background-color: #14977d;
+  }
+  
+  /* Login Redirect */
+  .login-redirect {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 14px;
+    color: #bbb;
+  }
+  
+  .login-redirect a {
+    color: #1abc9c;
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  .login-redirect a:hover {
+    color: #14977d;
+    text-decoration: underline;
+  }
+  
+  /* Benefits Section */
+  .signup-benefits h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 2rem 0;
+    text-align: center;
+  }
+  
+  .benefits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .benefit-icon {
+    font-size: 24px;
+    min-width: 40px;
+    height: 40px;
+    background-color: rgba(26, 188, 156, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .benefit-content h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 18px;
+    color: #1abc9c;
+  }
+  
+  .benefit-content p {
+    margin: 0;
+    color: #bbb;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .signup-container {
+      flex-direction: column;
+    }
+    
+    .signup-content, 
+    .signup-benefits {
+      padding: 2rem;
+    }
+    
+    .signup-benefits {
+      order: -1; /* Show benefits first on mobile */
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .signup-content, 
+    .signup-benefits {
+      padding: 1.5rem;
+    }
+    
+    .signup-form {
+      max-width: 100%;
+    }
+  }

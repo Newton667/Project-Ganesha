@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Explore from './pages/Explore';
+import SignUp from './pages/SignUp';
 import './App.css';
 
 function App() {
@@ -29,6 +30,12 @@ function App() {
             <>
               <Navbar />
               <Contact />
+            </>
+          } />
+          <Route path="/signup" element={
+            <>
+              <Navbar />
+              <SignUp />
             </>
           } />
         </Routes>

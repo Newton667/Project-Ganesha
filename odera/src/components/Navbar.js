@@ -17,7 +17,9 @@ function Navbar() {
             <Link to="/contact" className="nav-link">Contact</Link>
           </div>
           <div className="join-button">
-            <button>Join Now</button>
+            <Link to="/SignUp">
+              <button>Join Now</button>
+            </Link>
           </div>
         </nav>
       </div>

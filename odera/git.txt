@@ -2,7 +2,7 @@ git status
 
 git remote -v
 
-got add . (adds everything)
+git add . (adds everything)
 
 git commit -m "Your commit message here"
 

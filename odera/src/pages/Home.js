@@ -40,14 +40,18 @@ function Home() {
               <Link to="/contact" className="nav-link">Contact</Link>
             </div>
             <div className="join-button">
-              <button>Join Now</button>
+              <Link to="/signup">
+                <button>Join Now</button>
+              </Link>
             </div>
           </nav>
         </div>
         
         <div className="banner-content">
           <h2>Gain experience to put on your resume, and get paid!</h2>
-          <button className="banner-join-btn">Join Now</button>
+          <Link to="/signup">
+            <button className="banner-join-btn">Join Now</button>
+          </Link>
         </div>
       </div>
       
@@ -133,7 +137,9 @@ function Home() {
             <img src="/laptop.png" alt="Laptop" />
             <div className="cta-content">
               <h2>Ready to kick-start your freelancing journey?</h2>
-              <button className="cta-join-btn">Join Now</button>
+              <Link to="/signup">
+                <button className="cta-join-btn">Join Now</button>
+              </Link>
             </div>
           </div>
         </section>

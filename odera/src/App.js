@@ -6,6 +6,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Explore from './pages/Explore';
 import SignUp from './pages/SignUp';
+import Login from './pages/Login';
 import './App.css';
 
 function App() {
@@ -36,6 +37,12 @@ function App() {
             <>
               <Navbar />
               <SignUp />
+            </>
+          } />
+          <Route path="/login" element={
+            <>
+              <Navbar />
+              <Login />
             </>
           } />
         </Routes>

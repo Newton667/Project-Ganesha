@@ -36,7 +36,7 @@ function Footer() {
 
                 {/* Example section */}
                 <div className='footer-section'>
-                    <h4>About</h4>
+                    <h4>Navigation</h4>
                     <ul style={{listStyleType: 'none', padding: '0'}}>
                         <li><Link to="/">Home</Link></li>
                         <li><Link to="/about">About Us</Link></li>

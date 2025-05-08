@@ -20,6 +20,7 @@
 }
 
 .footer-section h4 {
+    color: white;
     margin-bottom: 0.5rem;
 }
 
@@ -90,4 +91,7 @@
     background-color: #14977d;
   }
   
-  
+.logo h1 {
+    margin: 0;
+    color: #fff;
+}

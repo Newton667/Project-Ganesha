@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
-import Footer from '../components/Footer';
+//import Footer from '../components/Footer';
 
 function Home() {
   // Add class to body to help with styling
@@ -143,7 +143,6 @@ function Home() {
             </div>
           </div>
         </section>
-        <Footer />
       </div>
     </>
   );

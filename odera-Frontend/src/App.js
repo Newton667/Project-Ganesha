@@ -8,6 +8,8 @@ import Contact from './pages/Contact';
 import Explore from './pages/Explore';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
+import Employers from './pages/Employers';
+import Freelancers from './pages/Freelancers';
 import './App.css';
 
 function App() {
@@ -44,6 +46,18 @@ function App() {
             <>
               <Navbar />
               <Login />
+            </>
+          } />
+          <Route path="/employers" element={
+            <>
+              <Navbar />
+              <Employers />
+            </>
+          } />
+          <Route path="/freelancers" element={
+            <>
+              <Navbar />
+              <Freelancers />
             </>
           } />
         </Routes>

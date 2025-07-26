@@ -14,3 +14,18 @@ body {
   margin: 2rem auto;
   padding: 2rem;
 }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-wrap {
+  flex: 1;
+}

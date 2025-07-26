@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -9,6 +10,8 @@ import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
+import Employers from './pages/Employers';
+import Freelancers from './pages/Freelancers';
 import './App.css';
 
 function App() {
@@ -70,8 +73,21 @@ function App() {
               <PrivateRoute><Dashboard /></PrivateRoute>
             </>
           } />
+          <Route path="/employers" element={
+            <>
+              <Navbar />
+              <Employers />
+            </>
+          } />
+          <Route path="/freelancers" element={
+            <>
+              <Navbar />
+              <Freelancers />
+            </>
+          } />
         </Routes>
       </div>
+      <Footer />
     </Router>
   );
 }

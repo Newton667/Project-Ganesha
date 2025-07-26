@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import Footer from '../components/Footer';
+//import Footer from '../components/Footer';
 import './About.css';
 
 const About = () => {
@@ -308,7 +308,6 @@ const About = () => {
         </div>
       </section>
       
-      <Footer />
       
       {/* JavaScript for animations */}
       <script dangerouslySetInnerHTML={{

@@ -17,7 +17,7 @@ function Footer() {
                     <h4>Jobs</h4>
                     <ul style={{listStyleType: 'none', padding: '0'}}>
                         <li><Link to="/about">Catagories</Link></li>
-                        <li><Link to="/about">Projects</Link></li>
+                        <li><Link to="/explore">Projects</Link></li>
                         <li><Link to="/about">Companies</Link></li>
                         <li><Link to="/about">Freelancers</Link></li>
                     </ul>
@@ -36,10 +36,9 @@ function Footer() {
 
                 {/* Example section */}
                 <div className='footer-section'>
-                    <h4>About</h4>
+                    <h4>Navigation</h4>
                     <ul style={{listStyleType: 'none', padding: '0'}}>
                         <li><Link to="/">Home</Link></li>
-                        <li><Link to="/about">About Us</Link></li>
                         <li><Link to="/contact">Contact</Link></li>
                         <li><Link to="/about">Our Mission</Link></li>
                         <li><Link to="/about">Our Partners</Link></li>

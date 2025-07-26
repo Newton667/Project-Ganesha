@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import {UserAuth} from '../context/AuthContext';
 import './SignUp.css';
 
 const SignUp = () => {
@@ -12,6 +13,15 @@ const SignUp = () => {
     role: 'developer' // Default role
   });
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState("");
+
+  const { session, signUpNewUser } = UserAuth();
+  const navigate = useNavigate()
+  console.log(session)
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -20,12 +30,27 @@ const SignUp = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Here you would normally handle the signup process
-    // For example, send the data to your backend
+    // Data will be directly sent to supabase from frontend
+    setLoading(true)
+    try {
+      const result = await signUpNewUser(formData.email, formData.password)
+
+      if(result.success){
+        navigate('/dashboard')
+      }
+    } catch(err) {
+      setError("an error occured");
+    } finally {
+      setLoading(false)
+    }
+
+    // Logging
     console.log('Form submitted:', formData);
     // Reset form after submission
+    /*
     setFormData({
       firstName: '',
       lastName: '',
@@ -34,6 +59,7 @@ const SignUp = () => {
       confirmPassword: '',
       role: 'developer'
     });
+    */
   };
 
   return (
@@ -149,6 +175,7 @@ const SignUp = () => {
           </div>
           
           <button type="submit" className="signup-button">Create Account</button>
+          {error && <p className='text-red-600 text-center pt-4'>{error}</p>}
         </form>
         
         <div className="login-redirect">

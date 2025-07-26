@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -7,9 +7,28 @@ import Contact from './pages/Contact';
 import Explore from './pages/Explore';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import PrivateRoute from './components/PrivateRoute';
 import './App.css';
 
 function App() {
+  
+  //Example snippet, remove later
+  /*
+  const [backendData, setBackendData] = useState([{}])
+
+  useEffect(() => {
+    fetch("/users").then(
+      response => response.json()
+    ).then(
+      data => {
+        setBackendData(data)
+      }
+    )
+  }, [])
+  */
+  //End of example snippet
+
   return (
     <Router>
       <div className="app">
@@ -43,6 +62,12 @@ function App() {
             <>
               <Navbar />
               <Login />
+            </>
+          } />
+          <Route path="/dashboard" element={
+            <>
+              <Navbar />
+              <PrivateRoute><Dashboard /></PrivateRoute>
             </>
           } />
         </Routes>

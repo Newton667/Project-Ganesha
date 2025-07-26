@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import {UserAuth} from '../context/AuthContext';
 import './Login.css';
 
 const Login = () => {
@@ -9,6 +10,16 @@ const Login = () => {
     rememberMe: false
   });
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState("");
+
+  const { session, signInUser } = UserAuth();
+  const navigate = useNavigate()
+  console.log(session)
+
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -17,10 +28,24 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Here you would normally handle the login process
     // For example, send the data to your backend
+
+    setLoading(true)
+    try {
+      const result = await signInUser (formData.email, formData.password)
+
+      if(result.success){
+        navigate('/dashboard')
+      }
+    } catch(err) {
+      setError("an error occured");
+    } finally {
+      setLoading(false)
+    }
+
     console.log('Login attempt:', formData);
     // You would typically authenticate with your backend here
     // and redirect to the appropriate page on success

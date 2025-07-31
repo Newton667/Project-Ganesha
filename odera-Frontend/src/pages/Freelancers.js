@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
+import { UserAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './Freelancers.css';
 
 function Freelancers() {
   const [activeSection, setActiveSection] = useState('overview');
   
+  // Define session
+  const { session, signOut } = UserAuth();
+  const navigate = useNavigate();
+
   // Mock user data
   const userData = {
     name: 'Alex Chen',

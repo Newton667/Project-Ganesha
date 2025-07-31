@@ -36,7 +36,7 @@ const SignUp = () => {
     // Data will be directly sent to supabase from frontend
     setLoading(true)
     try {
-      const result = await signUpNewUser(formData.email, formData.password)
+      const result = await signUpNewUser(formData.email, formData.password, formData.firstName, formData.lastName)
 
       if(result.success){
         navigate('/dashboard')

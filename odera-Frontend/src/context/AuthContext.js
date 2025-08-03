@@ -23,7 +23,8 @@ export const AuthContextProvider = ({children}) => {
             console.error("there was a problem signing up: ", error);
             return { success: false, error }
         }
-        return { success: true, data }
+        // Session returned to allow writing to DB using session key
+        return { success: true, data, session: data.session, user: data.user }
     }
 
     // Sign in

@@ -35,13 +35,52 @@ const SignUp = () => {
     // Here you would normally handle the signup process
     // Data will be directly sent to supabase from frontend
     setLoading(true)
+    setError('');
+
     try {
       const result = await signUpNewUser(formData.email, formData.password, formData.firstName, formData.lastName)
 
       if(result.success){
+        const accessToken = result.session?.access_token;
+        if (!accessToken) {
+          // Logic for Email Verification Should go here
+          throw new Error('No access token found after sign up.');
+        }
+
+        // ✅ Determine the endpoint based on role
+        let endpoint = '';
+        if (formData.role === 'developer' || formData.role === 'both') {
+          endpoint = '/api/freelancerSignUp';
+        } else if (formData.role === 'client') {
+          endpoint = '/api/employerSignUp';
+        }
+
+        // Call backend to update the user profile in Supabase
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({
+            Fname: formData.firstName,
+            Lname: formData.lastName,
+            email: formData.email
+          })
+        });
+
+        const data = await response.json();
+
+        // Throw an error if the request does not go through
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to update profile');
+        }
+
+        // Navigate to the Dashboard
         navigate('/dashboard')
       }
     } catch(err) {
+      console.log(err)
       setError("an error occured");
     } finally {
       setLoading(false)

@@ -4,20 +4,23 @@ const express = require('express');
 const router = express.Router();
 
 /* GET FreelancerProfile listing. */
-router.get('/', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;
+  const { Fname, Lname, email } = req.body;
 
-  const { data, error } = await supabase
-    .from('Freelancers')
-    .select(`
-      *,
-      FreelancerProfile(*)
-    `)
-  .eq('FreelancerID', userId);
+  const { error } = await supabase
+    .from('Employers')
+    .insert({
+        EmployerID: userId,
+        FirstName: Fname,
+        LastName: Lname,
+        Email: email
+    });
 
   if (error) return res.status(500).json({ error: error.message });
 
-  res.json(data);
+  res.json({ success: true });
 });
+
 
 module.exports = router;

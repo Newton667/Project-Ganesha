@@ -8,12 +8,12 @@ router.get('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;
 
   const { data, error } = await supabase
-    .from('Freelancers')
+    .from('Employers')
     .select(`
       *,
-      FreelancerProfile(*)
+      EmployerProfiles(*)
     `)
-  .eq('FreelancerID', userId);
+  .eq('EmployerID', userId);
 
   if (error) return res.status(500).json({ error: error.message });
 

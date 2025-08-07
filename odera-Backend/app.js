@@ -4,7 +4,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
-var freelancersRouter = require('./routes/freelancers');
+var freelancersRouter = require('./routes/freelancerDashboard');
 var freelancersOnboardRouter = require('./routes/freelancerSignUp');
 var employersersOnboardRouter = require('./routes/employerSignUp');
 
@@ -17,7 +17,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/api/freelancers', freelancersRouter);
+app.use('/api/freelancerDashboard', freelancersRouter);
 app.use('/api/freelancerSignUp', freelancersOnboardRouter);
 app.use('/api/employerSignUp', employersersOnboardRouter);
 

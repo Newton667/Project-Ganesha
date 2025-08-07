@@ -49,10 +49,13 @@ const SignUp = () => {
 
         // ✅ Determine the endpoint based on role
         let endpoint = '';
+        let dashboard = '';
         if (formData.role === 'developer' || formData.role === 'both') {
           endpoint = '/api/freelancerSignUp';
+          dashboard = '/freelancers'
         } else if (formData.role === 'client') {
           endpoint = '/api/employerSignUp';
+          dashboard = '/employers'
         }
 
         // Call backend to update the user profile in Supabase
@@ -77,7 +80,7 @@ const SignUp = () => {
         }
 
         // Navigate to the Dashboard
-        navigate('/dashboard')
+        navigate(dashboard)
       }
     } catch(err) {
       console.log(err)

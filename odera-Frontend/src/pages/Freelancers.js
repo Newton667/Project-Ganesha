@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import './Freelancers.css';
 
 function Freelancers() {
@@ -10,7 +11,45 @@ function Freelancers() {
   const { session, signOut } = UserAuth();
   const navigate = useNavigate();
 
+  const [userData, setUserData] = useState(null);
+  const [activeProjects, setActiveProjects] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
+  const [earningsData, setEarningsData] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const token = session?.access_token;
+    if (!token) return;
+
+    fetch('/api/freelancerDashboard', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch dashboard data');
+        return res.json();
+      })
+      .then((data) => {
+        setUserData(data.userData);
+        setActiveProjects(data.activeProjects);
+        setMessages(data.messages);
+        setOpportunities(data.opportunities);
+        setEarningsData(data.earningsData);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.message);
+      });
+  }, [session]);
+
+  if (error) return <div>Error: {error}</div>;
+  if (!userData) return <div>Loading dashboard...</div>;
+
+
   // Mock user data
+  /*
   const userData = {
     name: 'Alex Chen',
     profileCompletion: 85,
@@ -119,6 +158,7 @@ function Freelancers() {
     { month: 'May', amount: 1100 },
     { month: 'Jun', amount: 1350 }
   ];
+  */
 
   const renderOverview = () => (
     <div className="overview-content">

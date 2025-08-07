@@ -13,11 +13,12 @@ const Dashboard = () => {
 
     console.log(session);
 
+    // Retrieve data based on auth token
     useEffect(() => {
         const token = session?.access_token;
         if (!token) return;
 
-        fetch('/api/freelancers', {
+        fetch('/api/freelancerDashboard', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

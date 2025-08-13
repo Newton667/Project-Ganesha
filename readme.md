@@ -46,13 +46,13 @@ cd odera
 
 **Frontend:**
 ```bash
-cd client
+cd odera-Frontend
 npm install
 ```
 
 **Backend:**
 ```bash
-cd ../server
+cd odera-Backend
 npm install
 ```
 
@@ -62,6 +62,7 @@ Create `.env` files in both client and server directories.
 
 **Frontend `.env`:**
 ```env
+PORT=5173
 REACT_APP_SUPABASE_URL=your_supabase_url
 REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
@@ -70,7 +71,6 @@ REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```env
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-JWT_SECRET=your_jwt_secret
 ```
 
 ---
@@ -117,13 +117,13 @@ POST /api/messages
 
 **Backend:**
 ```bash
-cd server
-npm run dev
+cd odera-Backend
+npm start
 ```
 
 **Frontend:**
 ```bash
-cd client
+cd odera-Frontend
 npm start
 ```
 
@@ -132,10 +132,64 @@ npm start
 
 ---
 
+## 🧪 Test User Data
+
+For development and testing purposes, you can use these pre-configured accounts:
+
+**Freelancer Accounts:**
+```
+Email: gg@odera.com
+Password: abcd1234
+
+Email: nnguyen@odera.com
+Password: abcd1234
+```
+
+**Employer Account:**
+```
+Email: dd@odera.com
+Password: abcd1234
+```
+
+---
+
+## 📝 Current Development Status & TODOs
+
+**⚠️ Work in Progress:** This project is currently under active development. While the basic structure is in place, several core features are still being implemented.
+
+### ✅ Completed
+- Basic React frontend structure
+- Express.js backend setup  
+- Supabase authentication integration
+- Database schema design
+- Basic page routing and navigation
+- Initial data fetching from database
+
+### 🚧 In Progress / TODO
+- **Database Integration:** Pages fetch from DB but aren't fully integrated yet
+- **Account Setup:** No page for account setup/email verification
+- **Core Job Functionality:** 
+  - Job acceptance/application system
+  - Freelancer job browsing and bidding
+  - Employer job posting and candidate selection
+- **Messaging System:** Real-time chat between clients and freelancers
+- **Payment Integration:** Stripe integration for secure payments
+- **User Profiles:** Complete freelancer and employer profile management
+- **Rating System:** Post-project rating and review functionality
+
+### 🎯 Next Milestones
+1. Complete database integration for all pages
+2. Implement email verification flow
+3. Build core job application/acceptance workflow
+4. Add real-time messaging functionality
+5. Integrate Stripe for payment processing
+
+---
+
 ## 🌐 Deployment
 
-- **Frontend** — Vercel / Netlify
-- **Backend** — Render / Railway / Heroku
+- **Frontend** — React
+- **Backend** — Express
 - **Database** — Supabase (managed PostgreSQL)
 
 ---
@@ -148,6 +202,16 @@ This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## 📧 Contact
 
-- **Author:** Anish
-- **Email:** your.email@example.com
-- **GitHub:** [@yourusername](https://github.com/yourusername)
+**Contributors:**
+
+- **Author:** Anish Boddu  
+  **Email:** [To be added] 
+  **GitHub:** [@anishb788](https://github.com/anishb788)
+
+- **Author:** Newton Nguyen
+  **Email:** [email@example.com]  
+  **GitHub:** [@Newton667](https://github.com/Newton667)
+
+- **Author:** Gabe Cargo
+  **Email:** [email@example.com]  
+  **GitHub:** [@username](https://github.com/username)

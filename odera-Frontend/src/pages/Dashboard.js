@@ -18,7 +18,7 @@ const Dashboard = () => {
         const token = session?.access_token;
         if (!token) return;
 
-        fetch('/api/freelancerDashboard', {
+        fetch('/api/employerDashboard', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

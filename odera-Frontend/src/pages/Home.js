@@ -40,8 +40,8 @@ function Home() {
               <Link to="/contact" className="nav-link">Contact</Link>
             </div>
             <div className="join-button">
-              <Link to="/signup">
-                <button>Join Now</button>
+              <Link to="/Login">
+                <button>Sign In</button>
               </Link>
             </div>
           </nav>

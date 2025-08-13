@@ -47,7 +47,7 @@ const SignUp = () => {
           throw new Error('No access token found after sign up.');
         }
 
-        // ✅ Determine the endpoint based on role
+        // Determine the endpoint based on role
         let endpoint = '';
         let dashboard = '';
         if (formData.role === 'developer' || formData.role === 'both') {

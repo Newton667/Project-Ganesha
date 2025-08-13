@@ -44,6 +44,17 @@ function Freelancers() {
       });
   }, [session]);
 
+  // Signout Function, integrate into UI later
+  const handleSignOut = async (e) => {
+        e.preventDefault()
+        try {
+            await signOut();
+            navigate('/');
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
   if (error) return <div>Error: {error}</div>;
   if (!userData) return <div>Loading dashboard...</div>;
 

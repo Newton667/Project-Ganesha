@@ -3,7 +3,7 @@ const authMiddleware = require('../config/authMiddleware');
 const express = require('express');
 const router = express.Router();
 
-/* GET FreelancerProfile listing. */
+/* POST add user to employers table. */
 router.post('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const { Fname, Lname, email } = req.body;

@@ -1,11 +1,67 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { UserAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './Employers.css';
 
 function Employers() {
   const [activeSection, setActiveSection] = useState('overview');
   const [selectedProject, setSelectedProject] = useState(null);
   
+  // Define session
+  const { session, signOut } = UserAuth();
+  const navigate = useNavigate();
+
+  const [userData, setUserData] = useState(null);
+  const [activeProjects, setActiveProjects] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [recentApplications, setRecentApplications] = useState([]);
+  const [availableDevelopers, setAvailableDevelopers] = useState([]);
+  const [earningsData, setEarningsData] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const token = session?.access_token;
+    if (!token) return;
+
+    fetch('/api/employerDashboard', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch dashboard data');
+        return res.json();
+      })
+      .then((data) => {
+        setUserData(data.userData);
+        setActiveProjects(data.activeProjects);
+        setMessages(data.messages);
+        setRecentApplications(data.recentApplications);
+        setAvailableDevelopers(data.availableDevelopers);
+        setEarningsData(data.earningsData);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.message);
+      });
+  }, [session]);
+
+  // Signout Function, integrate into UI later
+  const handleSignOut = async (e) => {
+        e.preventDefault()
+        try {
+            await signOut();
+            navigate('/');
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+  if (error) return <div>Error: {error}</div>;
+  if (!userData) return <div>Loading dashboard...</div>;
+
   // Mock user data
+  /*
   const userData = {
     companyName: 'TechStart Inc.',
     totalProjects: 18,
@@ -190,7 +246,7 @@ function Employers() {
       successRate: 98
     }
   ];
-
+  */
   const renderOverview = () => (
     <div className="overview-content">
       {/* Stats Cards */}

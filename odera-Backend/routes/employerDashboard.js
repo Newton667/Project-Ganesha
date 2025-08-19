@@ -1,3 +1,4 @@
+// employerDashboard.js
 const supabase = require('../config/supabaseClient');
 const authMiddleware = require('../config/authMiddleware');
 const express = require('express');

@@ -4,7 +4,7 @@
   "proxy": "http://localhost:3000",
   "private": true,
   "dependencies": {
-    "@supabase/supabase-js": "^2.52.1",
+    "@supabase/supabase-js": "^2.55.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",

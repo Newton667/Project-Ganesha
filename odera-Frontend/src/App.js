@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -37,54 +37,37 @@ function App() {
       <div className="app">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/explore" element={
-            <>
-              <Navbar />
-              <Explore />
-            </>
-          } />
-          <Route path="/about" element={
-            <>
-              <Navbar />
-              <About />
-            </>
-          } />
-          <Route path="/contact" element={
-            <>
-              <Navbar />
-              <Contact />
-            </>
-          } />
-          <Route path="/signup" element={
-            <>
-              <Navbar />
-              <SignUp />
-            </>
-          } />
-          <Route path="/login" element={
-            <>
-              <Navbar />
-              <Login />
-            </>
-          } />
-          <Route path="/dashboard" element={
-            <>
-              <Navbar />
-              <PrivateRoute><Dashboard /></PrivateRoute>
-            </>
-          } />
-          <Route path="/employers" element={
-            <>
-              <Navbar />
-              <Employers />
-            </>
-          } />
-          <Route path="/freelancers" element={
-            <>
-              <Navbar />
-              <Freelancers />
-            </>
-          } />
+
+          <Route path="/explore" element={<><Navbar /><Explore /></>} />
+          <Route path="/about" element={<><Navbar /><About /></>} />
+          <Route path="/contact" element={<><Navbar /><Contact /></>} />
+          <Route path="/signup" element={<><Navbar /><SignUp /></>} />
+          <Route path="/login" element={<><Navbar /><Login /></>} />
+
+          {/* Main dashboard hub */}
+          <Route
+            path="/dashboard"
+            element={<><Navbar /><PrivateRoute><Dashboard /></PrivateRoute></>}
+          />
+
+          {/* Freelancer dashboard */}
+          <Route
+            path="/dashboard/freelancers"
+            element={<><Navbar /><PrivateRoute><Freelancers /></PrivateRoute></>}
+          />
+
+          {/* Employer dashboard */}
+          <Route
+            path="/dashboard/employers"
+            element={<><Navbar /><PrivateRoute><Employers /></PrivateRoute></>}
+          />
+
+          {/* Redirect old paths to new dashboard URLs */}
+          <Route path="/freelancers" element={<Navigate to="/dashboard/freelancers" replace />} />
+          <Route path="/employers" element={<Navigate to="/dashboard/employers" replace />} />
+
+          {/* Optional 404 redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
       <Footer />

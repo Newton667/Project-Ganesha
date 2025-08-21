@@ -1,18 +1,15 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar'; // ✅ use the shared Navbar
 import './Home.css';
-//import Footer from '../components/Footer';
 
 function Home() {
-  // Add class to body to help with styling
   useEffect(() => {
     document.body.classList.add('home-page');
     document.body.style.margin = '0';
     document.body.style.padding = '0';
     document.body.style.width = '100vw';
     document.body.style.overflowX = 'hidden';
-    
-    // Cleanup function
     return () => {
       document.body.classList.remove('home-page');
       document.body.style.margin = '';
@@ -26,27 +23,12 @@ function Home() {
     <>
       <div className="banner">
         <img src="/Untitled_design.png" alt="Banner" />
-        
-        {/* Home-specific navbar */}
-        <div className="navbar-container">
-          <nav className="navbar">
-            <div className="logo">
-              <Link to="/">Odera</Link>
-            </div>
-            <div className="nav-links">
-              <Link to="/" className="nav-link">Home</Link>
-              <Link to="/explore" className="nav-link">Explore</Link>
-              <Link to="/about" className="nav-link">About</Link>
-              <Link to="/contact" className="nav-link">Contact</Link>
-            </div>
-            <div className="join-button">
-              <Link to="/Login">
-                <button>Sign In</button>
-              </Link>
-            </div>
-          </nav>
+
+        {/* ✅ Use the auth-aware Navbar instead of a hardcoded one */}
+        <div className="navbar-container navbar-on-hero">
+          <Navbar />
         </div>
-        
+
         <div className="banner-content">
           <h2>Gain experience to put on your resume, and get paid!</h2>
           <Link to="/signup">
@@ -54,7 +36,7 @@ function Home() {
           </Link>
         </div>
       </div>
-      
+
       <div className="home-content">
         <div className="future-leaders-section">
           <h2>Let future leaders take it from here</h2>
@@ -63,11 +45,11 @@ function Home() {
             <button className="search-btn">Search</button>
           </div>
         </div>
-        
+
         <div className="designed-by">
           <h2>Designed by College Students, for College Students</h2>
         </div>
-        
+
         <section className="our-goal">
           <div className="goal-container">
             <div className="goal-image">
@@ -82,7 +64,7 @@ function Home() {
             </div>
           </div>
         </section>
-        
+
         <section className="how-it-works">
           <h2>How It Works</h2>
           <div className="steps-container">
@@ -108,7 +90,7 @@ function Home() {
             </div>
           </div>
         </section>
-        
+
         <section className="benefits">
           <h2>Why Choose Odera</h2>
           <div className="benefits-grid">
@@ -130,8 +112,7 @@ function Home() {
             </div>
           </div>
         </section>
-        
-        {/* New freelancing CTA section with laptop image */}
+
         <section className="freelancing-cta">
           <div className="laptop-image">
             <img src="/laptop.png" alt="Laptop" />

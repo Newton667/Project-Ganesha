@@ -1,175 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { UserAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import './Freelancers.css';
+
+const SAFE_DEFAULTS = {
+  name: 'User',
+  profileCompletion: 0,
+  totalEarnings: 0,
+  activeProjects: 0,
+  completedProjects: 0,
+  rating: 0,
+  responseTime: '—',
+  availability: '—',
+};
 
 function Freelancers() {
   const [activeSection, setActiveSection] = useState('overview');
-  
-  // Define session
+
   const { session, signOut } = UserAuth();
   const navigate = useNavigate();
 
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(SAFE_DEFAULTS);
   const [activeProjects, setActiveProjects] = useState([]);
   const [messages, setMessages] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [earningsData, setEarningsData] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Load data when session becomes available
   useEffect(() => {
-    const token = session?.access_token;
-    if (!token) return;
+    let cancelled = false;
 
-    fetch('/api/freelancerDashboard', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch dashboard data');
-        return res.json();
-      })
-      .then((data) => {
-        setUserData(data.userData);
-        setActiveProjects(data.activeProjects);
-        setMessages(data.messages);
-        setOpportunities(data.opportunities);
-        setEarningsData(data.earningsData);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError(err.message);
-      });
-  }, [session]);
+    async function load() {
+      // Wait for auth; don't flag an error just because it's not ready yet
+      const token = session?.access_token;
+      if (!token) {
+        setLoading(true);
+        setError(null);
+        return;
+      }
 
-  // Signout Function, integrate into UI later
-  const handleSignOut = async (e) => {
-        e.preventDefault()
-        try {
-            await signOut();
-            navigate('/');
-        } catch (err) {
-            console.error(err)
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch('/api/freelancerDashboard', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Read as text first so we can show helpful errors if not JSON
+        const text = await res.text();
+        if (!res.ok) {
+          throw new Error(`API ${res.status} ${res.statusText} — ${text || '(no body)'}`);
         }
+
+        const data = text ? JSON.parse(text) : {};
+        if (cancelled) return;
+
+        setUserData(data.userData ?? SAFE_DEFAULTS);
+        setActiveProjects(data.activeProjects ?? []);
+        setMessages(data.messages ?? []);
+        setOpportunities(data.opportunities ?? []);
+        setEarningsData(data.earningsData ?? []);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('[Freelancers] fetch error:', err);
+        setError(err.message || 'Unknown error');
+        // Keep UI usable
+        setUserData(SAFE_DEFAULTS);
+        setActiveProjects([]);
+        setMessages([]);
+        setOpportunities([]);
+        setEarningsData([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
 
-  if (error) return <div>Error: {error}</div>;
-  if (!userData) return <div>Loading dashboard...</div>;
+    load();
+    return () => { cancelled = true; };
+  }, [session]); // re-run when session changes
 
+  const initials = useMemo(() => {
+    const [first, last] = (userData?.name || 'User').split(' ');
+    return `${(first?.[0] || 'U').toUpperCase()}${(last?.[0] || '').toUpperCase()}`;
+  }, [userData]);
 
-  // Mock user data
-  /*
-  const userData = {
-    name: 'Alex Chen',
-    profileCompletion: 85,
-    totalEarnings: 4850,
-    activeProjects: 2,
-    completedProjects: 12,
-    rating: 4.8,
-    responseTime: '2 hours',
-    availability: 'Available'
+  const handleSignOut = async (e) => {
+    e.preventDefault();
+    try {
+      await signOut();
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+    }
   };
-  
-  // Active projects
-  const activeProjects = [
-    {
-      id: 1,
-      title: 'E-commerce Website Development',
-      client: 'TechStart Inc.',
-      progress: 75,
-      budget: 1500,
-      deadline: '5 days',
-      status: 'In Progress',
-      lastUpdate: '2 hours ago',
-      milestones: { completed: 3, total: 4 }
-    },
-    {
-      id: 2,
-      title: 'Mobile App UI Design',
-      client: 'Design Studio',
-      progress: 45,
-      budget: 800,
-      deadline: '2 weeks',
-      status: 'In Progress',
-      lastUpdate: '1 day ago',
-      milestones: { completed: 2, total: 5 }
-    }
-  ];
-  
-  // Recent messages
-  const messages = [
-    {
-      id: 1,
-      client: 'TechStart Inc.',
-      message: 'Great work on the homepage! Can we discuss the checkout flow?',
-      time: '30 minutes ago',
-      unread: true
-    },
-    {
-      id: 2,
-      client: 'Design Studio',
-      message: 'Please send the updated wireframes when ready.',
-      time: '2 hours ago',
-      unread: true
-    },
-    {
-      id: 3,
-      client: 'Previous Client',
-      message: 'Thank you for the excellent work!',
-      time: '1 day ago',
-      unread: false
-    }
-  ];
-  
-  // Available opportunities
-  const opportunities = [
-    {
-      id: 1,
-      title: 'React Dashboard Development',
-      budget: '$1,200 - $2,000',
-      duration: '3-4 weeks',
-      skills: ['React', 'Node.js', 'Charts'],
-      proposals: 8,
-      posted: '2 hours ago',
-      client: 'Analytics Co.',
-      urgency: 'high'
-    },
-    {
-      id: 2,
-      title: 'WordPress Plugin Development',
-      budget: '$600 - $900',
-      duration: '2 weeks',
-      skills: ['PHP', 'WordPress', 'JavaScript'],
-      proposals: 5,
-      posted: '5 hours ago',
-      client: 'Marketing Agency',
-      urgency: 'medium'
-    },
-    {
-      id: 3,
-      title: 'Data Visualization Script',
-      budget: '$400 - $600',
-      duration: '1 week',
-      skills: ['Python', 'Matplotlib', 'Pandas'],
-      proposals: 12,
-      posted: '1 day ago',
-      client: 'Research Lab',
-      urgency: 'low'
-    }
-  ];
-  
-  // Earnings data (last 6 months)
-  const earningsData = [
-    { month: 'Jan', amount: 650 },
-    { month: 'Feb', amount: 820 },
-    { month: 'Mar', amount: 720 },
-    { month: 'Apr', amount: 950 },
-    { month: 'May', amount: 1100 },
-    { month: 'Jun', amount: 1350 }
-  ];
-  */
 
   const renderOverview = () => (
     <div className="overview-content">
@@ -180,7 +106,9 @@ function Freelancers() {
             <h3>Total Earnings</h3>
             <span className="stat-icon">💰</span>
           </div>
-          <div className="stat-value">${userData.totalEarnings.toLocaleString()}</div>
+          <div className="stat-value">
+            ${Number(userData?.totalEarnings ?? 0).toLocaleString()}
+          </div>
           <div className="stat-change">+15% this month</div>
         </div>
         <div className="stat-card projects">
@@ -188,27 +116,27 @@ function Freelancers() {
             <h3>Active Projects</h3>
             <span className="stat-icon">📋</span>
           </div>
-          <div className="stat-value">{userData.activeProjects}</div>
-          <div className="stat-change">{userData.completedProjects} completed</div>
+          <div className="stat-value">{userData?.activeProjects ?? 0}</div>
+          <div className="stat-change">{userData?.completedProjects ?? 0} completed</div>
         </div>
         <div className="stat-card rating">
           <div className="stat-header">
             <h3>Rating</h3>
             <span className="stat-icon">⭐</span>
           </div>
-          <div className="stat-value">{userData.rating}</div>
-          <div className="stat-change">Based on 12 reviews</div>
+          <div className="stat-value">{userData?.rating ?? 0}</div>
+          <div className="stat-change">Based on recent reviews</div>
         </div>
         <div className="stat-card response">
           <div className="stat-header">
             <h3>Response Time</h3>
             <span className="stat-icon">⚡</span>
           </div>
-          <div className="stat-value">{userData.responseTime}</div>
+          <div className="stat-value">{userData?.responseTime ?? '—'}</div>
           <div className="stat-change">Average response</div>
         </div>
       </div>
-      
+
       {/* Active Projects */}
       <div className="dashboard-section">
         <div className="section-header">
@@ -216,26 +144,29 @@ function Freelancers() {
           <button className="view-all-btn">View All</button>
         </div>
         <div className="projects-list">
+          {activeProjects.length === 0 && (
+            <div className="project-card"><p>No active projects yet.</p></div>
+          )}
           {activeProjects.map(project => (
             <div key={project.id} className="project-card">
               <div className="project-header">
                 <h3>{project.title}</h3>
-                <span className={`status-badge ${project.status.toLowerCase().replace(' ', '-')}`}>
-                  {project.status}
+                <span className={`status-badge ${String(project.status || '').toLowerCase().replace(' ', '-')}`}>
+                  {project.status || '—'}
                 </span>
               </div>
               <div className="project-details">
-                <p><strong>Client:</strong> {project.client}</p>
-                <p><strong>Budget:</strong> ${project.budget}</p>
-                <p><strong>Deadline:</strong> {project.deadline}</p>
+                <p><strong>Client:</strong> {project.client || '—'}</p>
+                <p><strong>Budget:</strong> ${project.budget ?? '—'}</p>
+                <p><strong>Deadline:</strong> {project.deadline || '—'}</p>
               </div>
               <div className="progress-section">
                 <div className="progress-header">
-                  <span>Progress: {project.progress}%</span>
-                  <span>Milestone {project.milestones.completed}/{project.milestones.total}</span>
+                  <span>Progress: {project.progress ?? 0}%</span>
+                  <span>Milestone {project?.milestones?.completed ?? 0}/{project?.milestones?.total ?? 0}</span>
                 </div>
                 <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${project.progress}%` }}></div>
+                  <div className="progress-fill" style={{ width: `${project.progress ?? 0}%` }} />
                 </div>
               </div>
               <div className="project-actions">
@@ -246,7 +177,7 @@ function Freelancers() {
           ))}
         </div>
       </div>
-      
+
       {/* Quick Actions */}
       <div className="dashboard-section">
         <h2>Quick Actions</h2>
@@ -272,151 +203,27 @@ function Freelancers() {
     </div>
   );
 
-  const renderProjects = () => (
-    <div className="projects-content">
-      <div className="section-header">
-        <h2>My Projects</h2>
-        <div className="project-filters">
-          <button className="filter-btn active">All</button>
-          <button className="filter-btn">Active</button>
-          <button className="filter-btn">Completed</button>
-          <button className="filter-btn">Pending</button>
-        </div>
-      </div>
-      <div className="projects-grid">
-        {activeProjects.map(project => (
-          <div key={project.id} className="project-card detailed">
-            <div className="project-header">
-              <h3>{project.title}</h3>
-              <span className={`status-badge ${project.status.toLowerCase().replace(' ', '-')}`}>
-                {project.status}
-              </span>
-            </div>
-            <div className="project-meta">
-              <div className="meta-item">
-                <span className="meta-label">Client</span>
-                <span className="meta-value">{project.client}</span>
-              </div>
-              <div className="meta-item">
-                <span className="meta-label">Budget</span>
-                <span className="meta-value">${project.budget}</span>
-              </div>
-              <div className="meta-item">
-                <span className="meta-label">Deadline</span>
-                <span className="meta-value">{project.deadline}</span>
-              </div>
-              <div className="meta-item">
-                <span className="meta-label">Progress</span>
-                <span className="meta-value">{project.progress}%</span>
-              </div>
-            </div>
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${project.progress}%` }}></div>
-            </div>
-            <div className="project-actions">
-              <button className="btn-secondary">Message Client</button>
-              <button className="btn-primary">Open Project</button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderMessages = () => (
-    <div className="messages-content">
-      <div className="section-header">
-        <h2>Messages</h2>
-        <button className="btn-primary">Compose</button>
-      </div>
-      <div className="messages-list">
-        {messages.map(message => (
-          <div key={message.id} className={`message-item ${message.unread ? 'unread' : ''}`}>
-            <div className="message-header">
-              <h3>{message.client}</h3>
-              <span className="message-time">{message.time}</span>
-            </div>
-            <p className="message-preview">{message.message}</p>
-            <div className="message-actions">
-              <button className="btn-secondary">Reply</button>
-              <button className="btn-link">Mark as Read</button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderOpportunities = () => (
-    <div className="opportunities-content">
-      <div className="section-header">
-        <h2>Available Opportunities</h2>
-        <div className="opportunity-filters">
-          <select className="filter-select">
-            <option>All Categories</option>
-            <option>Web Development</option>
-            <option>Mobile Apps</option>
-            <option>Design</option>
-          </select>
-          <select className="filter-select">
-            <option>All Budgets</option>
-            <option>Under $500</option>
-            <option>$500-$1000</option>
-            <option>$1000+</option>
-          </select>
-        </div>
-      </div>
-      <div className="opportunities-list">
-        {opportunities.map(opportunity => (
-          <div key={opportunity.id} className={`opportunity-item urgency-${opportunity.urgency}`}>
-            <div className="opportunity-header">
-              <h3>{opportunity.title}</h3>
-              <span className="budget">{opportunity.budget}</span>
-            </div>
-            <div className="opportunity-meta">
-              <span className="client">by {opportunity.client}</span>
-              <span className="duration">{opportunity.duration}</span>
-              <span className="posted">{opportunity.posted}</span>
-            </div>
-            <div className="skills-required">
-              {opportunity.skills.map((skill, index) => (
-                <span key={index} className="skill-tag">{skill}</span>
-              ))}
-            </div>
-            <div className="opportunity-footer">
-              <span className="proposals">{opportunity.proposals} proposals</span>
-              <div className="opportunity-actions">
-                <button className="btn-secondary">Save</button>
-                <button className="btn-primary">Apply Now</button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
   const renderContent = () => {
-    switch(activeSection) {
+    switch (activeSection) {
       case 'overview': return renderOverview();
-      case 'projects': return renderProjects();
-      case 'messages': return renderMessages();
-      case 'opportunities': return renderOpportunities();
       default: return renderOverview();
     }
   };
 
+  if (loading) return <div style={{ color: 'white', padding: '2rem' }}>Loading dashboard...</div>;
+  if (error)   return <div style={{ color: 'red',   padding: '2rem' }}>Error: {error}</div>;
+
   return (
     <div className="freelancer-dashboard">
       <div className="navbar-area"></div>
-      
+
       {/* Dashboard Header */}
       <div className="dashboard-header">
         <div className="user-info">
-          <div className="user-avatar">AC</div>
+          <div className="user-avatar">{initials}</div>
           <div className="user-details">
-            <h1>Welcome back, {userData.name}</h1>
-            <p>Profile {userData.profileCompletion}% complete • {userData.availability}</p>
+            <h1>Welcome back, {userData?.name ?? 'User'}</h1>
+            <p>Profile {userData?.profileCompletion ?? 0}% complete • {userData?.availability ?? '—'}</p>
           </div>
         </div>
         <div className="header-actions">
@@ -424,44 +231,20 @@ function Freelancers() {
             <span className="notification-icon">🔔</span>
             <span className="notification-count">3</span>
           </button>
-          <button className="profile-btn">Settings</button>
+          <button className="profile-btn" onClick={handleSignOut}>Sign Out</button>
         </div>
       </div>
-      
+
       {/* Navigation Tabs */}
       <div className="dashboard-nav">
-        <button 
+        <button
           className={`nav-item ${activeSection === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveSection('overview')}
         >
-          <span className="nav-icon">📊</span>
-          Overview
-        </button>
-        <button 
-          className={`nav-item ${activeSection === 'projects' ? 'active' : ''}`}
-          onClick={() => setActiveSection('projects')}
-        >
-          <span className="nav-icon">📋</span>
-          My Projects
-          <span className="nav-badge">{userData.activeProjects}</span>
-        </button>
-        <button 
-          className={`nav-item ${activeSection === 'messages' ? 'active' : ''}`}
-          onClick={() => setActiveSection('messages')}
-        >
-          <span className="nav-icon">💬</span>
-          Messages
-          <span className="nav-badge">2</span>
-        </button>
-        <button 
-          className={`nav-item ${activeSection === 'opportunities' ? 'active' : ''}`}
-          onClick={() => setActiveSection('opportunities')}
-        >
-          <span className="nav-icon">🔍</span>
-          Opportunities
+          <span className="nav-icon">📊</span> Overview
         </button>
       </div>
-      
+
       {/* Main Content */}
       <div className="dashboard-content">
         {renderContent()}

@@ -10,12 +10,14 @@ import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
+import PublicRoute from './components/PublicRoute';
 import Employers from './pages/Employers';
 import Freelancers from './pages/Freelancers';
+import FreelancerSettings from './pages/FreelancerSettings';
 import './App.css';
 
 function App() {
-  
+
   //Example snippet, remove later
   /*
   const [backendData, setBackendData] = useState([{}])
@@ -41,8 +43,26 @@ function App() {
           <Route path="/explore" element={<><Navbar /><Explore /></>} />
           <Route path="/about" element={<><Navbar /><About /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
-          <Route path="/signup" element={<><Navbar /><SignUp /></>} />
-          <Route path="/login" element={<><Navbar /><Login /></>} />
+
+
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <><Navbar /><Login /></>
+              </PublicRoute>
+            }
+          />
+
+          <Route
+            path="/signup"
+            element={
+              <PublicRoute>
+                <><Navbar /><SignUp /></>
+              </PublicRoute>
+            }
+          />
+
 
           {/* Main dashboard hub */}
           <Route
@@ -60,6 +80,12 @@ function App() {
           <Route
             path="/dashboard/employers"
             element={<><Navbar /><PrivateRoute><Employers /></PrivateRoute></>}
+          />
+
+          {/* freelancer settings page */}
+          <Route
+            path="/dashboard/freelancers/settings/*"
+            element={<><Navbar /><PrivateRoute><FreelancerSettings /></PrivateRoute></>}
           />
 
           {/* Redirect old paths to new dashboard URLs */}

@@ -366,7 +366,7 @@ function Freelancers() {
 
   if (error) {
     return (
-      <div className="freelancer-dashboard">
+      <div className="employer-dashboard">
         <div style={{ color: 'red', padding: '2rem', textAlign: 'center' }}>
           <h3>Error loading dashboard</h3>
           <p>{error}</p>
@@ -401,7 +401,9 @@ function Freelancers() {
             <span className="notification-icon">🔔</span>
             <span className="notification-count">3</span>
           </button>
-          <button className="profile-btn">Settings</button>
+          <button className="profile-btn" onClick={() => navigate("/dashboard/freelancers/settings")}>
+            Settings
+          </button>
           <button className="profile-btn" onClick={handleSignOut}>Sign Out</button>
         </div>
       </div>

@@ -14,6 +14,7 @@ import PublicRoute from './components/PublicRoute';
 import Employers from './pages/Employers';
 import Freelancers from './pages/Freelancers';
 import FreelancerSettings from './pages/FreelancerSettings';
+import EmployerSettings from './pages/EmployerSettings';
 import './App.css';
 
 function App() {
@@ -86,6 +87,12 @@ function App() {
           <Route
             path="/dashboard/freelancers/settings/*"
             element={<><Navbar /><PrivateRoute><FreelancerSettings /></PrivateRoute></>}
+          />
+
+          {/* employer settings page */}
+          <Route
+            path="/dashboard/employers/settings/*"
+            element={<><Navbar /><PrivateRoute><EmployerSettings /></PrivateRoute></>}
           />
 
           {/* Redirect old paths to new dashboard URLs */}

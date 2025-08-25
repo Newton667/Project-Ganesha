@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { UserAuth } from "../context/AuthContext";
-import "./FreelancerSettings.css";
+import "./EmployerSettings.css";
 
-const FreelancerSettings = () => {
+const EmployerSettings = () => {
     const { session } = UserAuth();
     const [settings, setSettings] = useState({
         firstName: "",
@@ -10,14 +10,10 @@ const FreelancerSettings = () => {
         email: "",
         phoneNumber: "",
         address: "",
+        companyName: "",
         userBio: "",
         organization: "",
         profilePic: "",
-        hourlyRate: "",
-        specialty: "",
-        school: "",
-        year: "Freshman",
-        availability: "Unavailable",
         mailingList: false,
     });
     const [loading, setLoading] = useState(true);
@@ -33,7 +29,7 @@ const FreelancerSettings = () => {
             return;
         }
 
-        fetch("/api/freelancer/settings", {
+        fetch("/api/employer/settings", {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -48,14 +44,10 @@ const FreelancerSettings = () => {
                         email: data.settings.Email || "",
                         phoneNumber: data.settings.PhoneNumber || "",
                         address: data.settings.Address || "",
+                        companyName: data.settings.CompanyName || "",
                         userBio: data.settings.UserBio || "",
                         organization: data.settings.Organization || "",
                         profilePic: data.settings.ProfilePic || "",
-                        hourlyRate: data.settings.HourlyRate || "",
-                        specialty: data.settings.Specialty || "",
-                        school: data.settings.School || "",
-                        year: data.settings.Year || "Freshman",
-                        availability: data.settings.Availability || "Unavailable",
                         mailingList: Boolean(data.settings.MailingList),
                     };
                     
@@ -96,18 +88,14 @@ const FreelancerSettings = () => {
                 Email: settings.email,
                 PhoneNumber: settings.phoneNumber,
                 Address: settings.address,
+                CompanyName: settings.companyName,
                 UserBio: settings.userBio,
                 Organization: settings.organization,
                 ProfilePic: settings.profilePic,
-                HourlyRate: settings.hourlyRate,
-                Specialty: settings.specialty,
-                School: settings.school,
-                Year: settings.year,
-                Availability: settings.availability,
                 MailingList: settings.mailingList,
             };
             
-            const res = await fetch("/api/freelancer/settings", {
+            const res = await fetch("/api/employer/settings", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -131,8 +119,8 @@ const FreelancerSettings = () => {
     if (loading) return <p className="loading">Loading settings...</p>;
 
     return (
-        <div className="freelancer-settings">
-            <h2>Freelancer Settings</h2>
+        <div className="employer-settings">
+            <h2>Employer Settings</h2>
 
             {error && <p className="error">{error}</p>}
             {success && <p className="success">{success}</p>}
@@ -173,6 +161,13 @@ const FreelancerSettings = () => {
                     onChange={handleChange}
                     placeholder="Address"
                 />
+                <input
+                    type="text"
+                    name="companyName"
+                    value={settings.companyName || ""}
+                    onChange={handleChange}
+                    placeholder="Company Name"
+                />
                 <textarea
                     name="userBio"
                     value={settings.userBio || ""}
@@ -193,47 +188,6 @@ const FreelancerSettings = () => {
                     onChange={handleChange}
                     placeholder="Profile Pic URL"
                 />
-                <input
-                    type="number"
-                    name="hourlyRate"
-                    value={settings.hourlyRate || ""}
-                    onChange={handleChange}
-                    placeholder="Hourly Rate ($)"
-                />
-                <input
-                    type="text"
-                    name="specialty"
-                    value={settings.specialty || ""}
-                    onChange={handleChange}
-                    placeholder="Specialty"
-                />
-                <input
-                    type="text"
-                    name="school"
-                    value={settings.school || ""}
-                    onChange={handleChange}
-                    placeholder="School"
-                />
-                <select
-                    name="year"
-                    value={settings.year || "Freshman"}
-                    onChange={handleChange}
-                >
-                    <option value="Freshman">Freshman</option>
-                    <option value="Sophomore">Sophomore</option>
-                    <option value="Junior">Junior</option>
-                    <option value="Senior">Senior</option>
-                    <option value="Graduate">Graduate</option>
-                </select>
-                <select
-                    name="availability"
-                    value={settings.availability || "Unavailable"}
-                    onChange={handleChange}
-                >
-                    <option value="Available">Available</option>
-                    <option value="Unavailable">Unavailable</option>
-                    <option value="Busy">Busy</option>
-                </select>
                 <label>
                     <input
                         type="checkbox"
@@ -252,4 +206,4 @@ const FreelancerSettings = () => {
     );
 };
 
-export default FreelancerSettings;
+export default EmployerSettings;

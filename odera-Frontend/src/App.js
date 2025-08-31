@@ -15,6 +15,7 @@ import Employers from './pages/Employers';
 import Freelancers from './pages/Freelancers';
 import FreelancerSettings from './pages/FreelancerSettings';
 import EmployerSettings from './pages/EmployerSettings';
+import ApplyForm from "./pages/ApplyForm";
 import './App.css';
 
 function App() {
@@ -45,6 +46,8 @@ function App() {
           <Route path="/about" element={<><Navbar /><About /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
 
+          {/* ApplyForm URL Route */}          
+          <Route path="/apply/:jobId" element={<><Navbar /><ApplyForm /></>} />
 
           <Route
             path="/login"

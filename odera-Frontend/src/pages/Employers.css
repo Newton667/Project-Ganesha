@@ -407,6 +407,26 @@ body {
   color: #1abc9c;
 }
 
+.btn-link:hover {
+  color: #1abc9c;
+}
+
+.btn-reject {
+  background-color: #e74c3c;;
+  color: white;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-reject:hover {
+  background-color: #9c4d44;
+  color: white;
+}
+
 /* Quick Actions Grid */
 .quick-actions-grid {
   display: grid;
@@ -742,6 +762,7 @@ body {
   gap: 0.5rem;
   justify-content: flex-end;
 }
+
 
 /* Messages Content */
 .messages-list {

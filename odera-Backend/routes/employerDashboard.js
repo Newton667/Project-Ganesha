@@ -66,33 +66,34 @@ router.get('/', authMiddleware, async (req, res) => {
       };
     });
 
-    // 3. Recent applications
-    // Gets all applications for the jobs this employer owns.
-    const { data: applications, error: appsErr } = await supabase
-      .from('JobApplications')
-      .select(`
-        ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter,
-        Jobs(JobTitle),
-        Freelancers(FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty)),
-        FreelancerSkills(Skill)
-      `)
-      .in('JobID', contracts.map(c => c.JobID));
+  // 3. Recent applications
+  // Gets all applications for jobs this employer owns (no contracts needed).
+  const { data: applications, error: appsErr } = await supabase
+    .from('JobApplications')
+    .select(`
+      ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter,
+      Jobs(JobTitle, EmployerID),
+      Freelancers(FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty)),
+      FreelancerSkills(Skill)
+    `)
+    .eq('Jobs.EmployerID', employerData.EmployerID);  // Filter directly by employer’s ID
 
-    if (appsErr) throw appsErr;
+  if (appsErr) throw appsErr;
 
-    const recentApplications = applications.map(a => ({
-      id: a.ApplicationID,
-      projectTitle: a.Jobs?.JobTitle || '',
-      applicant: `${a.Freelancers?.FirstName || ''} ${a.Freelancers?.LastName || ''}`.trim(),
-      applicantAvatar: (a.Freelancers?.FirstName?.[0] || '') + (a.Freelancers?.LastName?.[0] || ''),
-      rating: a.Freelancers?.FreelancerProfile?.Rating || 0,
-      experience: a.Experience || 'Unknown',
-      proposedBudget: a.Rating || 0,
-      timeline: a.Timeline || '',
-      coverLetter: a.CoverLetter || '',
-      portfolio: (a.FreelancerSkills || []).map(s => s.Skill),
-      appliedTime: 'N/A' // Would require an application timestamp column
-    }));
+  const recentApplications = applications.map(a => ({
+    id: a.ApplicationID,
+    projectTitle: a.Jobs?.JobTitle || '',
+    applicant: `${a.Freelancers?.FirstName || ''} ${a.Freelancers?.LastName || ''}`.trim(),
+    applicantAvatar: (a.Freelancers?.FirstName?.[0] || '') + (a.Freelancers?.LastName?.[0] || ''),
+    rating: a.Freelancers?.FreelancerProfile?.Rating || 0,
+    experience: a.Experience || 'Unknown',
+    proposedBudget: a.Rating || 0,
+    timeline: a.Timeline || '',
+    coverLetter: a.CoverLetter || '',
+    portfolio: (a.FreelancerSkills || []).map(s => s.Skill),
+    appliedTime: 'N/A' // Would require an application timestamp column
+  }));
+
 
     // 4. Messages
     /*

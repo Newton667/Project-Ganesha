@@ -10,6 +10,7 @@ function Explore() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   const tabs = [
     { id: 'all', label: 'All Jobs', cat: null },
@@ -132,7 +133,7 @@ function Explore() {
     };
 
     return (
-      <div className="service-card">
+      <div className="service-card" onClick={() => setSelectedJob(service)}>
         <div className="service-header">
           <div className="service-icon">{icon}</div>
         </div>
@@ -246,6 +247,35 @@ function Explore() {
           </div>
         </>
       )}
+
+      {selectedJob && (
+        <div className="job-modal">
+          <div className="job-modal-content">
+            <button className="close-btn" onClick={() => setSelectedJob(null)}>✖</button>
+
+            <h2>{selectedJob.title}</h2>
+            <p>{selectedJob.desc || "No description provided."}</p>
+
+            <div className="job-meta">
+              <strong>Budget:</strong> {prettyBudget(selectedJob.budget)}<br/>
+              <strong>Urgency:</strong> {selectedJob.urgency || "—"}<br/>
+              <strong>Categories:</strong> {selectedJob.category || selectedJob.JobCat || "—"}
+            </div>
+
+            <button 
+              className="apply-btn"
+              onClick={() => {
+                // close modal and navigate
+                setSelectedJob(null);
+                window.location.href = `/apply/${selectedJob.id}`;
+              }}
+            >
+              Apply for Contract
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

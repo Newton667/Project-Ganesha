@@ -356,6 +356,7 @@ function Employers() {
             <div className="application-actions">
               <button className="btn-secondary">View Profile</button>
               <button className="btn-secondary">Message</button>
+              <button className="btn-reject">Reject Application</button>
               <button className="btn-primary">Accept Application</button>
             </div>
           </div>

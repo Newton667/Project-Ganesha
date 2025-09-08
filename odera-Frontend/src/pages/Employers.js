@@ -100,6 +100,39 @@ function Employers() {
     }
   };
 
+  const handleRejectApplication = async (applicationId) => {
+    if (!session?.access_token) {
+      console.error("No session token found.");
+      return;
+    }
+  
+    try {
+      const res = await fetch(`/api/job-applications/employerreject/${applicationId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+  
+      const result = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to reject application");
+      }
+  
+      // Remove the rejected application from local state
+      setRecentApplications(prev =>
+        prev.filter(app => app.id !== applicationId)
+      );
+  
+      console.log("Application rejected:", result.message);
+    } catch (err) {
+      console.error("Error rejecting application:", err.message);
+      alert(`Error: ${err.message}`);
+    }
+  };
+  
+
   const renderOverview = () => (
     <div className="overview-content">
       {/* Stats Cards */}
@@ -356,7 +389,12 @@ function Employers() {
             <div className="application-actions">
               <button className="btn-secondary">View Profile</button>
               <button className="btn-secondary">Message</button>
-              <button className="btn-reject">Reject Application</button>
+              <button
+              className="btn-reject"
+              onClick={() => handleRejectApplication(application.id)}>
+              Reject Application
+              </button>
+
               <button className="btn-primary">Accept Application</button>
             </div>
           </div>

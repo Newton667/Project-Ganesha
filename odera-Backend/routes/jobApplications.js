@@ -183,8 +183,54 @@ router.put('/:applicationId', authMiddleware, async (req, res) => {
   res.json({ success: true, message: 'Application updated successfully' });
 });
 
-/* DELETE job application */
-router.delete('/:applicationId', authMiddleware, async (req, res) => {
+/* Application Rejected from the client side */
+// Employer rejects an application
+router.delete('/employerreject/:applicationId', authMiddleware, async (req, res) => {
+  const employerId = req.user.id; // logged in employer
+  const { applicationId } = req.params;
+
+  // First, fetch the application with the related job to ensure employer owns the job
+  const { data: existingApp, error: checkError } = await supabase
+    .from('JobApplications')
+    .select(`
+      ApplicationID,
+      Status,
+      JobID,
+      Jobs!inner(EmployerID)
+    `)
+    .eq('ApplicationID', applicationId)
+    .single();
+
+  if (checkError || !existingApp) {
+    return res.status(404).json({ error: 'Application not found' });
+  }
+
+  // Ensure the employer owns this job
+  if (existingApp.Jobs.EmployerID !== employerId) {
+    return res.status(403).json({ error: 'Not authorized to reject this application' });
+  }
+
+  // Only allow rejection if still pending
+  if (existingApp.Status !== 'Pending') {
+    return res.status(400).json({ 
+      error: 'Cannot reject application that is no longer pending' 
+    });
+  }
+
+  // Instead of deleting, you might just want to update Status to 'Rejected'
+  const { error } = await supabase
+    .from('JobApplications')
+    .update({ Status: 'Rejected' })
+    .eq('ApplicationID', applicationId);
+
+  if (error) return res.status(500).json({ error: error.message });
+  
+  res.json({ success: true, message: 'Application rejected successfully' });
+});
+
+
+/* User Recinds job application */
+router.delete('clientreject/:applicationId', authMiddleware, async (req, res) => {
   const userId = req.user.id;
   const { applicationId } = req.params;
 

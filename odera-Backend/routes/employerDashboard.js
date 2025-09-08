@@ -67,16 +67,18 @@ router.get('/', authMiddleware, async (req, res) => {
     });
 
   // 3. Recent applications
-  // Gets all applications for jobs this employer owns (no contracts needed).
+  // Gets all applications for jobs this employer owns.
   const { data: applications, error: appsErr } = await supabase
-    .from('JobApplications')
-    .select(`
-      ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter,
-      Jobs(JobTitle, EmployerID),
-      Freelancers(FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty)),
-      FreelancerSkills(Skill)
-    `)
-    .eq('Jobs.EmployerID', employerData.EmployerID);  // Filter directly by employer’s ID
+  .from('JobApplications')
+  .select(`
+    ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter,
+    Jobs(JobTitle, EmployerID),
+    Freelancers(FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty)),
+    FreelancerSkills(Skill)
+  `)
+  .eq('Jobs.EmployerID', employerData.EmployerID) // Filter by employer’s ID
+  .eq('Status', 'Pending'); // Only applications with Status = "Pending"
+
 
   if (appsErr) throw appsErr;
 

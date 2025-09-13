@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const dayjs = require('dayjs');
 const supabase = require('../config/supabaseClient');
-const authMiddleware = require('../config/authMiddleware'); // optional
+const authMiddleware = require('../config/authMiddleware');
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
@@ -101,6 +101,62 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Unhandled server error' });
   }
 });
+
+// routes/jobs.js
+
+router.post('/createjob', authMiddleware, async (req, res) => {
+  try {
+    const employerId = req.user.id; // from authMiddleware (supabase JWT user id) 
+
+    const {
+      title,
+      desc,
+      category,
+      urgency,
+      duration,
+      price,
+      budgetMin,
+      budgetMax,
+    } = req.body;
+
+    // Basic validation
+    if (!title || !desc || !category || !price) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const { data, error } = await supabase
+      .from('Jobs')
+      .insert([
+        {
+          EmployerID: employerId,
+          JobTitle: title,
+          JobDesc: desc,
+          JobCat: category,
+          Urgency: urgency || null,
+          Duration: duration || null,
+          JobPrice: Number(price) || 0,
+          BudgetMin: Number(budgetMin) || 0,
+          BudgetMax: Number(budgetMax) || 0,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[POST /jobs/createjob] supabase error:', error);
+      return res.status(500).json({ error: 'Failed to create job' });
+    }
+
+    res.status(201).json({
+      id: data.JobID,
+      message: 'Job created successfully',
+    });
+  } catch (e) {
+    console.error('[POST /jobs/createjob] unhandled:', e);
+    res.status(500).json({ error: 'Unhandled server error' });
+  }
+});
+
 
 /**
  * GET /jobs/:id  — fetch a single job by JobID

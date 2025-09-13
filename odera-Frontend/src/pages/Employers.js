@@ -177,7 +177,7 @@ function Employers() {
       <div className="dashboard-section">
         <div className="section-header">
           <h2>Active Projects</h2>
-          <button className="btn-primary">Post New Project</button>
+          <button className="btn-primary" onClick={() => navigate("/dashboard/employers/post-job")}>Post New Project</button>
         </div>
         <div className="projects-overview">
           {activeProjects.length === 0 && (
@@ -227,7 +227,7 @@ function Employers() {
       <div className="dashboard-section">
         <h2>Quick Actions</h2>
         <div className="quick-actions-grid">
-          <button className="action-item primary">
+          <button onClick={() => navigate("/dashboard/employers/post-job")} className="action-item primary">
             <span className="action-icon">➕</span>
             <span>Post New Project</span>
           </button>
@@ -259,7 +259,7 @@ function Employers() {
             <button className="filter-btn">Completed</button>
             <button className="filter-btn">Pending</button>
           </div>
-          <button className="btn-primary">Post New Project</button>
+          <button onClick={() => navigate("/dashboard/employers/post-job")} className="btn-primary">Post New Project</button>
         </div>
       </div>
       <div className="projects-grid">

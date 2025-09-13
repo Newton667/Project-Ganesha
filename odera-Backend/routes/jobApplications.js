@@ -183,7 +183,6 @@ router.put('/:applicationId', authMiddleware, async (req, res) => {
   res.json({ success: true, message: 'Application updated successfully' });
 });
 
-/* Application Rejected from the client side */
 // Employer rejects an application
 router.delete('/employerreject/:applicationId', authMiddleware, async (req, res) => {
   const employerId = req.user.id; // logged in employer

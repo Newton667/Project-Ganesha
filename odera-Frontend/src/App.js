@@ -16,6 +16,7 @@ import Freelancers from './pages/Freelancers';
 import FreelancerSettings from './pages/FreelancerSettings';
 import EmployerSettings from './pages/EmployerSettings';
 import ApplyForm from "./pages/ApplyForm";
+import PostJob from './pages/PostJob';
 import './App.css';
 
 function App() {
@@ -96,6 +97,12 @@ function App() {
           <Route
             path="/dashboard/employers/settings/*"
             element={<><Navbar /><PrivateRoute><EmployerSettings /></PrivateRoute></>}
+          />
+
+          {/* employer settings page */}
+          <Route
+            path="/dashboard/employers/post-job/*"
+            element={<><Navbar /><PrivateRoute><PostJob /></PrivateRoute></>}
           />
 
           {/* Redirect old paths to new dashboard URLs */}

@@ -12,26 +12,10 @@ import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import Employers from './pages/Employers';
 import Freelancers from './pages/Freelancers';
+import CreateProjects from './pages/Createprojects';
 import './App.css';
 
 function App() {
-  
-  //Example snippet, remove later
-  /*
-  const [backendData, setBackendData] = useState([{}])
-
-  useEffect(() => {
-    fetch("/api/users").then(
-      response => response.json()
-    ).then(
-      data => {
-        setBackendData(data)
-      }
-    )
-  }, [])
-  */
-  //End of example snippet
-
   return (
     <Router>
       <div className="app">
@@ -43,6 +27,12 @@ function App() {
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
           <Route path="/signup" element={<><Navbar /><SignUp /></>} />
           <Route path="/login" element={<><Navbar /><Login /></>} />
+
+          {/* Create Projects Route with Private Route */}
+          <Route
+            path="/create-projects"
+            element={<><Navbar /><PrivateRoute><CreateProjects /></PrivateRoute></>}
+          />
 
           {/* Main dashboard hub */}
           <Route

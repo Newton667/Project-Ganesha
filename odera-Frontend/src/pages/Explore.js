@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UserAuth } from '../context/AuthContext'; // Import UserAuth context
 import './Explore.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE || ''; // "" if same origin, or "http://localhost:4000"
@@ -10,6 +12,8 @@ function Explore() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
+  const { session } = UserAuth(); // Get the session from UserAuth
 
   const tabs = [
     { id: 'all', label: 'All Jobs', cat: null },
@@ -23,23 +27,7 @@ function Explore() {
     { id: 'devops', label: 'DevOps', cat: 'DevOps' },
   ];
 
-  // Icons
-  const SearchIcon = () => (
-    <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-  const StarIcon = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-    </svg>
-  );
-  const DropdownIcon = () => (
-    <svg className="filter-dropdown-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
+  // Login status check removed - using UserAuth context
 
   // Fetch jobs
   useEffect(() => {
@@ -77,7 +65,7 @@ function Explore() {
     }
     load();
     return () => controller.abort();
-  }, [activeTab, searchTerm, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeTab, searchTerm, page]);
 
   const onTabClick = (id) => {
     setActiveTab(id);
@@ -102,6 +90,33 @@ function Explore() {
         _reviews: 0,
       })),
     [jobs]
+  );
+
+  // Icons
+  const SearchIcon = () => (
+    <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+
+  const StarIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+    </svg>
+  );
+
+  const DropdownIcon = () => (
+    <svg className="filter-dropdown-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+
+  const PlusIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
   );
 
   const ServiceCard = ({ service }) => {
@@ -170,6 +185,16 @@ function Explore() {
         </div>
       </div>
     );
+  };
+
+  const handlePostProject = () => {
+    if (session) {
+      // If there's a session (user is logged in), navigate to create projects
+      navigate('/create-projects');
+    } else {
+      // If no session, navigate to login
+      navigate('/login');
+    }
   };
 
   return (
@@ -246,6 +271,14 @@ function Explore() {
           </div>
         </>
       )}
+
+      <button 
+        className="post-project-btn" 
+        onClick={handlePostProject}
+      >
+        <PlusIcon />
+        Post New Project
+      </button>
     </div>
   );
 }

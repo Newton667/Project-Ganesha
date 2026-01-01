@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UserAuth } from '../context/AuthContext';
 import './Createprojects.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE || ''; // "" if same origin, or "http://localhost:4000"
 
 function CreateProjects() {
   const navigate = useNavigate();
+  const { session } = UserAuth();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -42,6 +44,13 @@ function CreateProjects() {
     'High',
     'Urgent'
   ];
+
+  // Check if user is authenticated on mount
+  useEffect(() => {
+    if (!session) {
+      navigate('/login');
+    }
+  }, [session, navigate]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -108,11 +117,19 @@ function CreateProjects() {
     setSubmitError(null);
 
     try {
+      // Get access token from session
+      const accessToken = session?.access_token;
+      
+      if (!accessToken) {
+        throw new Error('Please log in to create a project');
+      }
+
       const response = await fetch(`${API_BASE}/api/jobs`, {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           jobTitle: formData.jobTitle.trim(),

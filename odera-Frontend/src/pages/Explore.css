@@ -6,6 +6,7 @@ body {
 
 /* Main container */
 .dev-marketplace {
+  position: relative;
   background-color: #222;
   color: #f5f5f5;
   min-height: 100vh;
@@ -35,6 +36,39 @@ body {
   transition: background-color 0.3s;
 }
 .join-now-btn:hover { background-color: #14977d; }
+
+/* Post New Project Button */
+.post-project-btn {
+  background-color: #1abc9c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  position: absolute;
+  top: 60px; /* Positioned just below the navbar area */
+  right: 2rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.post-project-btn:hover {
+  background-color: #14977d;
+  transform: translateY(-2px);
+}
+
+.post-project-btn svg {
+  stroke: white;
+  stroke-width: 2;
+  width: 16px;
+  height: 16px;
+}
 
 /* Header section */
 .marketplace-header {
@@ -183,7 +217,7 @@ body {
   max-height: 2.6em;
 }
 
-/* Category chips (moved OUTSIDE media queries) */
+/* Category chips */
 .category-chips {
   display: flex;
   flex-wrap: wrap;
@@ -217,29 +251,52 @@ body {
 }
 .price-amount { color: #fff; font-size: 16px; font-weight: 600; }
 
-/* Filters section */
-.filters-section {
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #444;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  background-color: #2a2a2a;
-}
-.filter {
+/* Service meta */
+.service-meta {
   padding: 0.5rem 1rem;
-  background-color: #333;
+  font-size: 12px;
+  color: #999;
+  background-color: #2c2c2c;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background-color: #222;
+  gap: 1rem;
+}
+
+.pagination button {
+  background-color: #2a2a2a;
+  color: #f5f5f5;
   border: 1px solid #444;
   border-radius: 4px;
-  color: #bbb;
+  padding: 0.5rem 1rem;
   font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
-.filter-icon { color: #1abc9c; }
+
+.pagination button:hover:not(:disabled) {
+  background-color: #333;
+  transform: translateY(-2px);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination .page-num {
+  color: #bbb;
+  font-size: 14px;
+}
 
 /* Search bar */
 .search-container { flex: 1 1 300px; position: relative; }
@@ -262,9 +319,53 @@ body {
   color: #999;
 }
 
+/* Error and Loading states */
+.error-box {
+  background-color: #ff4d4d;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  margin: 1rem;
+  border-radius: 4px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  color: #bbb;
+  font-size: 16px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #bbb;
+  padding: 2rem;
+  font-size: 16px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .filters-section { flex-direction: column; align-items: flex-start; }
-  .search-container { width: 100%; }
-  .services-grid { padding: 1rem; }
+  .search-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-buttons {
+    margin-top: 1rem;
+    justify-content: center;
+  }
+  
+  .services-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+  
+  .post-project-btn {
+    right: 1rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 12px;
+  }
 }

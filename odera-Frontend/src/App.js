@@ -17,6 +17,7 @@ import FreelancerSettings from './pages/FreelancerSettings';
 import EmployerSettings from './pages/EmployerSettings';
 import ApplyForm from "./pages/ApplyForm";
 import PostJob from './pages/PostJob';
+import CreateProjects from './pages/Createprojects';
 import './App.css';
 
 function App() {
@@ -68,6 +69,14 @@ function App() {
             }
           />
 
+          <Route path="/signup" element={<><Navbar /><SignUp /></>} />
+          <Route path="/login" element={<><Navbar /><Login /></>} />
+
+          {/* Create Projects Route with Private Route */}
+          <Route
+            path="/create-projects"
+            element={<><Navbar /><PrivateRoute><CreateProjects /></PrivateRoute></>}
+          />
 
           {/* Main dashboard hub */}
           <Route

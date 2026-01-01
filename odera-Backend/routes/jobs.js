@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const dayjs = require('dayjs');
 const supabase = require('../config/supabaseClient');
-const authMiddleware = require('../config/authMiddleware'); // optional
+const authMiddleware = require('../config/authMiddleware');
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
@@ -104,7 +104,6 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /jobs/:id  — fetch a single job by JobID
- * If you want this restricted (e.g., only the employer who owns it), add authMiddleware and a check.
  */
 router.get('/:id', async (req, res) => {
   try {
@@ -138,6 +137,110 @@ router.get('/:id', async (req, res) => {
     });
   } catch (e) {
     console.error('[GET /jobs/:id] unhandled:', e);
+    res.status(500).json({ error: 'Unhandled server error' });
+  }
+});
+
+/**
+ * POST /jobs — Create a new job
+ * Requires authentication (employer must be logged in)
+ * Body: { jobTitle, jobDesc, jobCat, urgency, budgetMin, budgetMax, duration }
+ */
+router.post('/', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Check if user is an employer
+    const { data: employer, error: employerError } = await supabase
+      .from('Employers')
+      .select('EmployerID')
+      .eq('EmployerID', userId)
+      .maybeSingle();
+
+    if (employerError) {
+      console.error('[POST /jobs] employer lookup error:', employerError);
+      return res.status(500).json({ error: 'Failed to verify employer status' });
+    }
+
+    if (!employer) {
+      return res.status(403).json({ error: 'Only employers can create jobs' });
+    }
+
+    // Extract and validate job data from request body
+    const { jobTitle, jobDesc, jobCat, urgency, budgetMin, budgetMax, duration } = req.body;
+
+    // Validation
+    if (!jobTitle || !String(jobTitle).trim()) {
+      return res.status(400).json({ error: 'Job title is required' });
+    }
+    if (!jobDesc || !String(jobDesc).trim()) {
+      return res.status(400).json({ error: 'Job description is required' });
+    }
+    if (!jobCat) {
+      return res.status(400).json({ error: 'Job category is required' });
+    }
+    if (!urgency) {
+      return res.status(400).json({ error: 'Urgency level is required' });
+    }
+
+    const minBudget = num(budgetMin);
+    const maxBudget = num(budgetMax);
+
+    if (minBudget < 0 || maxBudget < 0) {
+      return res.status(400).json({ error: 'Budget values cannot be negative' });
+    }
+    if (minBudget > maxBudget && maxBudget > 0) {
+      return res.status(400).json({ error: 'Minimum budget cannot exceed maximum budget' });
+    }
+
+    // Calculate JobPrice as average of budget range (or max if no min)
+    const jobPrice = maxBudget > 0 ? (minBudget + maxBudget) / 2 : minBudget;
+
+    // Insert the job into the database
+    const { data: newJob, error: insertError } = await supabase
+      .from('Jobs')
+      .insert({
+        EmployerID: userId,
+        JobTitle: String(jobTitle).trim(),
+        JobDesc: String(jobDesc).trim(),
+        JobCat: jobCat,
+        Urgency: urgency,
+        BudgetMin: minBudget,
+        BudgetMax: maxBudget,
+        Duration: duration || null,
+        JobPrice: jobPrice,
+        // FreelancerID is null by default (job is open)
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('[POST /jobs] insert error:', insertError);
+      return res.status(500).json({ error: 'Failed to create job' });
+    }
+
+    // Return the created job in normalized format
+    res.status(201).json({
+      id: newJob.JobID,
+      title: newJob.JobTitle,
+      desc: newJob.JobDesc,
+      category: newJob.JobCat,
+      urgency: newJob.Urgency,
+      employerId: newJob.EmployerID,
+      freelancerId: newJob.FreelancerID,
+      duration: newJob.Duration,
+      price: num(newJob.JobPrice),
+      budget: { min: num(newJob.BudgetMin), max: num(newJob.BudgetMax) },
+      createdAt: newJob.JobCreated,
+      posted: newJob.JobCreated ? dayjs(newJob.JobCreated).fromNow() : 'Just now',
+    });
+
+  } catch (e) {
+    console.error('[POST /jobs] unhandled:', e);
     res.status(500).json({ error: 'Unhandled server error' });
   }
 });

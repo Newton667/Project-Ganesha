@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { UserAuth } from '../context/AuthContext';
+import './ApplyForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE || "";
 
@@ -77,55 +78,65 @@ function ApplyForm() {
   };
 
   return (
-    <div className="apply-page">
-      <h1>
-        Apply for Job {job ? job.title : `#${jobId}`}
-      </h1>
+  <div className="apply-page">
+    <header className="apply-header">
+      <h1>Apply for {job ? job.title : "Position"}</h1>
+    </header>
 
-      {error && <div className="error-box">{error}</div>}
-
+    <div className="form-container">
       <form onSubmit={handleSubmit} className="apply-form">
-        <label>
-          Proposal Text (required):
+        {error && <div className="error-box">{error}</div>}
+
+        <div className="form-group">
+          <label>Proposal Text (required)</label>
           <textarea
             value={proposalText}
             onChange={(e) => setProposalText(e.target.value)}
             required
+            placeholder="Describe why you are a good fit..."
           />
-        </label>
+        </div>
 
-        <label>
-          Cover Letter:
+        <div className="form-group">
+          <label>Cover Letter</label>
           <textarea
             value={coverLetter}
             onChange={(e) => setCoverLetter(e.target.value)}
           />
-        </label>
+        </div>
 
-        <label>
-          Relevant Experience:
+        <div className="form-group">
+          <label>Relevant Experience</label>
           <input
             type="text"
             value={experience}
             onChange={(e) => setExperience(e.target.value)}
+            placeholder="e.g. 3 years in React"
           />
-        </label>
+        </div>
 
-        <label>
-          Proposed Timeline:
+        <div className="form-group">
+          <label>Proposed Timeline</label>
           <input
             type="text"
             value={timeline}
             onChange={(e) => setTimeline(e.target.value)}
+            placeholder="e.g. 2 weeks"
           />
-        </label>
+        </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Submitting…" : "Submit Application"}
-        </button>
+        <div className="form-actions">
+          <button type="button" className="cancel-btn" onClick={() => navigate(-1)}>
+            Cancel
+          </button>
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? "Submitting..." : "Submit Application"}
+          </button>
+        </div>
       </form>
     </div>
-  );
+  </div>
+);
 }
 
 export default ApplyForm;

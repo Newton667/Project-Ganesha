@@ -1,0 +1,132 @@
+/* Apply Form Styles - Dark Mode */
+.apply-page {
+  background-color: #222;
+  color: #f5f5f5;
+  min-height: 100vh;
+  font-family: 'Roboto', sans-serif;
+}
+
+.apply-header {
+  background-color: #2a2a2a;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #444;
+}
+
+.apply-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.apply-form {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #bbb;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #333;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #f5f5f5;
+  font-size: 14px;
+  transition: border-color 0.3s;
+  box-sizing: border-box; /* Ensures padding doesn't break width */
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1abc9c;
+}
+
+.form-group textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.error-box {
+  background-color: rgba(255, 77, 77, 0.1);
+  color: #ff4d4d;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  border: 1px solid rgba(255, 77, 77, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.submit-btn {
+  background-color: #1abc9c;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #14977d;
+  transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background-color: transparent;
+  color: #bbb;
+  border: 1px solid #444;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.cancel-btn:hover {
+  background-color: #333;
+  color: #f5f5f5;
+}
+
+@media (max-width: 768px) {
+  .apply-form {
+    margin: 1rem;
+    padding: 1rem;
+  }
+  .form-actions {
+    flex-direction: column;
+  }
+  .submit-btn, .cancel-btn {
+    width: 100%;
+  }
+}

@@ -1,19 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserAuth } from '../context/AuthContext'; // Import UserAuth context
+import { UserAuth } from '../context/AuthContext';
 import './Explore.css';
 
-const API_BASE = process.env.REACT_APP_API_BASE || ''; // "" if same origin, or "http://localhost:4000"
+const API_BASE = process.env.REACT_APP_API_BASE || '';
 
 function Explore() {
-  const [activeTab, setActiveTab] = useState('all'); // default to All Jobs
+  const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
-  const { session } = UserAuth(); // Get the session from UserAuth
+  const { session } = UserAuth();
 
   const tabs = [
     { id: 'all', label: 'All Jobs', cat: null },
@@ -26,8 +26,6 @@ function Explore() {
     { id: 'desktop', label: 'Desktop Apps', cat: 'Desktop Apps' },
     { id: 'devops', label: 'DevOps', cat: 'DevOps' },
   ];
-
-  // Login status check removed - using UserAuth context
 
   // Fetch jobs
   useEffect(() => {
@@ -81,7 +79,7 @@ function Explore() {
     return `$${min} - $${max}`;
   };
 
-  // keep layout stable with placeholder rating/reviews
+  // Keep layout stable with placeholder rating/reviews
   const computedJobs = useMemo(
     () =>
       jobs.map(j => ({
@@ -119,7 +117,7 @@ function Explore() {
     </svg>
   );
 
-  const ServiceCard = ({ service }) => {
+  const ServiceCard = ({ service, onClick }) => {
     let icon = '💻';
     const t = (service.title || '').toLowerCase();
     if (t.includes('api') || t.includes('backend')) icon = '⚙️';
@@ -147,7 +145,7 @@ function Explore() {
     };
 
     return (
-      <div className="service-card">
+      <div className="service-card" onClick={onClick} style={{ cursor: 'pointer' }}>
         <div className="service-header">
           <div className="service-icon">{icon}</div>
         </div>
@@ -189,12 +187,14 @@ function Explore() {
 
   const handlePostProject = () => {
     if (session) {
-      // If there's a session (user is logged in), navigate to create projects
       navigate('/create-projects');
     } else {
-      // If no session, navigate to login
       navigate('/login');
     }
+  };
+
+  const handleJobClick = (jobId) => {
+    navigate(`/jobs/${jobId}`);
   };
 
   return (
@@ -256,7 +256,13 @@ function Explore() {
             {computedJobs.length === 0 ? (
               <div className="empty-state">No jobs found.</div>
             ) : (
-              computedJobs.map((j) => <ServiceCard key={j.id} service={j} />)
+              computedJobs.map((j) => (
+                <ServiceCard 
+                  key={j.id} 
+                  service={j} 
+                  onClick={() => handleJobClick(j.id)}
+                />
+              ))
             )}
           </div>
 

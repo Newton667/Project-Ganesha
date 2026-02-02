@@ -13,6 +13,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Employers from './pages/Employers';
 import Freelancers from './pages/Freelancers';
 import CreateProjects from './pages/Createprojects';
+import JobDetails from './pages/JobDetails';
 import './App.css';
 
 function App() {
@@ -27,6 +28,9 @@ function App() {
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
           <Route path="/signup" element={<><Navbar /><SignUp /></>} />
           <Route path="/login" element={<><Navbar /><Login /></>} />
+
+          {/* Job Details Page */}
+          <Route path="/jobs/:id" element={<><Navbar /><JobDetails /></>} />
 
           {/* Create Projects Route with Private Route */}
           <Route

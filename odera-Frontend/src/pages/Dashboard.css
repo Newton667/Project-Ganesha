@@ -10,6 +10,12 @@
   --danger: #e74c3c;
   --shadow: 0 8px 24px rgba(0,0,0,.35);
   --shadow-soft: 0 4px 16px rgba(0,0,0,.2);
+  --employer: #3498db;
+  --employer-soft: rgba(52,152,219,0.2);
+  --freelancer: #1abc9c;
+  --freelancer-soft: rgba(26,188,156,0.2);
+  --both: #9b59b6;
+  --both-soft: rgba(155,89,182,0.2);
 }
 
 *,
@@ -154,9 +160,43 @@ body {
 }
 
 .usertext p {
-  margin: 0; 
+  margin: 0 0 8px 0; 
   color: var(--muted); 
   font-size: 15px;
+}
+
+/* Account Type Badges */
+.account-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.account-badge--employer {
+  background: var(--employer-soft);
+  color: var(--employer);
+  border-color: var(--employer);
+}
+
+.account-badge--freelancer {
+  background: var(--freelancer-soft);
+  color: var(--freelancer);
+  border-color: var(--freelancer);
+}
+
+.account-badge--both {
+  background: var(--both-soft);
+  color: var(--both);
+  border-color: var(--both);
 }
 
 .cta-wrap {
@@ -326,5 +366,9 @@ body {
   
   .cta {
     padding: 20px;
+  }
+
+  .account-badge {
+    margin-top: 8px;
   }
 }

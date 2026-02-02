@@ -1,265 +1,204 @@
-const supabase = require('../config/supabaseClient');
-const authMiddleware = require('../config/authMiddleware');
+// routes/jobApplications.js
 const express = require('express');
 const router = express.Router();
+const supabase = require('../config/supabaseClient');
+const authMiddleware = require('../config/authMiddleware');
 
-/* POST job application */
-router.post('/', authMiddleware, async (req, res) => {
-  const userId = req.user.id;
-  const {
-    JobID,
-    ProposalText,
-    CoverLetter,
-    Experience,
-    Timeline,
-    Status
-  } = req.body;
+/**
+ * POST /api/jobs/:id/apply
+ * Submit an application/interest for a job
+ * Only freelancers can apply
+ */
+router.post('/:id/apply', authMiddleware, async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const userId = req.user?.id;
 
-  // Validate required fields
-  if (!JobID || !ProposalText) {
-    return res.status(400).json({ 
-      error: 'JobID and ProposalText are required' 
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Check if user is a freelancer
+    const { data: freelancer, error: freelancerError } = await supabase
+      .from('Freelancers')
+      .select('FreelancerID')
+      .eq('FreelancerID', userId)
+      .maybeSingle();
+
+    if (freelancerError) {
+      console.error('[POST /jobs/:id/apply] freelancer lookup error:', freelancerError);
+      return res.status(500).json({ error: 'Failed to verify freelancer status' });
+    }
+
+    if (!freelancer) {
+      return res.status(403).json({ error: 'Only freelancers can apply to jobs' });
+    }
+
+    // Check if job exists
+    const { data: job, error: jobError } = await supabase
+      .from('Jobs')
+      .select('JobID, EmployerID, FreelancerID')
+      .eq('JobID', jobId)
+      .maybeSingle();
+
+    if (jobError) {
+      console.error('[POST /jobs/:id/apply] job lookup error:', jobError);
+      return res.status(500).json({ error: 'Failed to fetch job' });
+    }
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Check if job is already taken
+    if (job.FreelancerID) {
+      return res.status(400).json({ error: 'This job has already been assigned' });
+    }
+
+    // Check if user is the job poster
+    if (job.EmployerID === userId) {
+      return res.status(400).json({ error: 'You cannot apply to your own job' });
+    }
+
+    // Check if user has already applied
+    const { data: existingApp, error: existingError } = await supabase
+      .from('JobApplications')
+      .select('ApplicationID')
+      .eq('JobID', jobId)
+      .eq('FreelancerID', userId)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error('[POST /jobs/:id/apply] existing application lookup error:', existingError);
+    }
+
+    if (existingApp) {
+      return res.status(400).json({ error: 'You have already applied to this job' });
+    }
+
+    // Extract application data from request body
+    const { proposalText, experience, timeline, coverLetter } = req.body;
+
+    if (!proposalText || !String(proposalText).trim()) {
+      return res.status(400).json({ error: 'Proposal text is required' });
+    }
+
+    // Insert the application
+    const { data: newApplication, error: insertError } = await supabase
+      .from('JobApplications')
+      .insert({
+        JobID: jobId,
+        FreelancerID: userId,
+        ProposalText: String(proposalText).trim(),
+        Experience: experience ? String(experience).trim() : null,
+        Timeline: timeline ? String(timeline).trim() : null,
+        CoverLetter: coverLetter ? String(coverLetter).trim() : null,
+        Status: 'Pending'
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('[POST /jobs/:id/apply] insert error:', insertError);
+      return res.status(500).json({ error: 'Failed to submit application' });
+    }
+
+    res.status(201).json({
+      success: true,
+      applicationId: newApplication.ApplicationID,
+      message: 'Application submitted successfully'
     });
+
+  } catch (e) {
+    console.error('[POST /jobs/:id/apply] unhandled:', e);
+    res.status(500).json({ error: 'Unhandled server error' });
   }
-
-  // Check if user already applied to this job
-  const { data: existingApplication } = await supabase
-    .from('JobApplications')
-    .select('ApplicationID')
-    .eq('JobID', JobID)
-    .eq('FreelancerID', userId)
-    .single();
-  
-  if (existingApplication) {
-    return res.status(409).json({ error: 'You have already applied to this job' });
-  }
-
-  // Insert the new job application
-  const { error } = await supabase
-    .from('JobApplications')
-    .insert({
-      JobID,
-      FreelancerID: userId,
-      ProposalText,
-      CoverLetter: CoverLetter || null,
-      Experience: Experience || null,
-      Timeline: Timeline || null,
-      Status: Status || 'Pending'
-    });
-
-  if (error) return res.status(500).json({ error: error.message });
-  
-  res.json({ success: true, message: 'Application submitted successfully' });
 });
 
-/* GET job applications for authenticated user */
-router.get('/', authMiddleware, async (req, res) => {
-  const userId = req.user.id;
+/**
+ * GET /api/jobs/:id/applications
+ * Get all applications for a job (employer only)
+ */
+router.get('/:id/applications', authMiddleware, async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const userId = req.user?.id;
 
-  const { data: applications, error } = await supabase
-    .from('JobApplications')
-    .select(`
-      ApplicationID,
-      JobID,
-      ProposalText,
-      CoverLetter,
-      Experience,
-      Timeline,
-      Status,
-      Jobs!inner (
-        JobTitle,
-        JobDesc,
-        JobPrice,
-        Employers!inner (
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Check if user is the job owner
+    const { data: job, error: jobError } = await supabase
+      .from('Jobs')
+      .select('JobID, EmployerID')
+      .eq('JobID', jobId)
+      .maybeSingle();
+
+    if (jobError) {
+      console.error('[GET /jobs/:id/applications] job lookup error:', jobError);
+      return res.status(500).json({ error: 'Failed to fetch job' });
+    }
+
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    if (job.EmployerID !== userId) {
+      return res.status(403).json({ error: 'Only the job poster can view applications' });
+    }
+
+    // Fetch applications with freelancer info
+    const { data: applications, error: appsError } = await supabase
+      .from('JobApplications')
+      .select(`
+        ApplicationID,
+        ProposalText,
+        Experience,
+        Timeline,
+        CoverLetter,
+        Status,
+        FreelancerID,
+        Freelancers (
           FirstName,
-          LastName
+          LastName,
+          Email
         )
-      )
-    `)
-    .eq('FreelancerID', userId)
-    .order('ApplicationID', { ascending: false });
+      `)
+      .eq('JobID', jobId)
+      .order('ApplicationID', { ascending: false });
 
-  if (error) return res.status(500).json({ error: error.message });
+    if (appsError) {
+      console.error('[GET /jobs/:id/applications] fetch error:', appsError);
+      return res.status(500).json({ error: 'Failed to fetch applications' });
+    }
 
-  // Flatten the nested structure
-  const flattenedApplications = applications.map(app => ({
-    ...app,
-    JobTitle: app.Jobs.JobTitle,
-    JobDesc: app.Jobs.JobDesc,
-    JobPrice: app.Jobs.JobPrice,
-    EmployerFirstName: app.Jobs.Employers.FirstName,
-    EmployerLastName: app.Jobs.Employers.LastName,
-    Jobs: undefined
-  }));
-  
-  res.json({ applications: flattenedApplications });
-});
+    // Normalize the response
+    const normalizedApps = (applications || []).map(app => ({
+      id: app.ApplicationID,
+      proposalText: app.ProposalText,
+      experience: app.Experience,
+      timeline: app.Timeline,
+      coverLetter: app.CoverLetter,
+      status: app.Status,
+      freelancer: app.Freelancers ? {
+        id: app.FreelancerID,
+        firstName: app.Freelancers.FirstName,
+        lastName: app.Freelancers.LastName,
+        email: app.Freelancers.Email
+      } : null
+    }));
 
-/* GET specific job application */
-router.get('/:applicationId', authMiddleware, async (req, res) => {
-  const userId = req.user.id;
-  const { applicationId } = req.params;
-
-  const { data: application, error } = await supabase
-    .from('JobApplications')
-    .select(`
-      *,
-      Jobs!inner (
-        JobTitle,
-        JobDesc,
-        JobPrice,
-        Employers!inner (
-          FirstName,
-          LastName
-        )
-      )
-    `)
-    .eq('ApplicationID', applicationId)
-    .eq('FreelancerID', userId)
-    .single();
-
-  if (error || !application) {
-    return res.status(404).json({ error: 'Application not found' });
-  }
-
-  // Flatten the structure
-  const flattenedApplication = {
-    ...application,
-    JobTitle: application.Jobs.JobTitle,
-    JobDesc: application.Jobs.JobDesc,
-    JobPrice: application.Jobs.JobPrice,
-    EmployerFirstName: application.Jobs.Employers.FirstName,
-    EmployerLastName: application.Jobs.Employers.LastName,
-    Jobs: undefined
-  };
-
-  res.json({ application: flattenedApplication });
-});
-
-/* PUT update job application */
-router.put('/:applicationId', authMiddleware, async (req, res) => {
-  const userId = req.user.id;
-  const { applicationId } = req.params;
-  const {
-    ProposalText,
-    CoverLetter,
-    Experience,
-    Timeline
-  } = req.body;
-
-  // Check if application exists and belongs to user
-  const { data: existingApp, error: checkError } = await supabase
-    .from('JobApplications')
-    .select('Status')
-    .eq('ApplicationID', applicationId)
-    .eq('FreelancerID', userId)
-    .single();
-  
-  if (checkError || !existingApp) {
-    return res.status(404).json({ error: 'Application not found' });
-  }
-
-  if (existingApp.Status !== 'Pending') {
-    return res.status(400).json({ 
-      error: 'Cannot update application that is no longer pending' 
+    res.json({
+      jobId,
+      applications: normalizedApps,
+      total: normalizedApps.length
     });
+
+  } catch (e) {
+    console.error('[GET /jobs/:id/applications] unhandled:', e);
+    res.status(500).json({ error: 'Unhandled server error' });
   }
-
-  // Prepare update object
-  const updateData = {};
-  if (ProposalText !== undefined) updateData.ProposalText = ProposalText;
-  if (CoverLetter !== undefined) updateData.CoverLetter = CoverLetter;
-  if (Experience !== undefined) updateData.Experience = Experience;
-  if (Timeline !== undefined) updateData.Timeline = Timeline;
-
-  const { error } = await supabase
-    .from('JobApplications')
-    .update(updateData)
-    .eq('ApplicationID', applicationId)
-    .eq('FreelancerID', userId);
-
-  if (error) return res.status(500).json({ error: error.message });
-  
-  res.json({ success: true, message: 'Application updated successfully' });
-});
-
-// Employer rejects an application
-router.delete('/employerreject/:applicationId', authMiddleware, async (req, res) => {
-  const employerId = req.user.id; // logged in employer
-  const { applicationId } = req.params;
-
-  // First, fetch the application with the related job to ensure employer owns the job
-  const { data: existingApp, error: checkError } = await supabase
-    .from('JobApplications')
-    .select(`
-      ApplicationID,
-      Status,
-      JobID,
-      Jobs!inner(EmployerID)
-    `)
-    .eq('ApplicationID', applicationId)
-    .single();
-
-  if (checkError || !existingApp) {
-    return res.status(404).json({ error: 'Application not found' });
-  }
-
-  // Ensure the employer owns this job
-  if (existingApp.Jobs.EmployerID !== employerId) {
-    return res.status(403).json({ error: 'Not authorized to reject this application' });
-  }
-
-  // Only allow rejection if still pending
-  if (existingApp.Status !== 'Pending') {
-    return res.status(400).json({ 
-      error: 'Cannot reject application that is no longer pending' 
-    });
-  }
-
-  // Instead of deleting, you might just want to update Status to 'Rejected'
-  const { error } = await supabase
-    .from('JobApplications')
-    .update({ Status: 'Rejected' })
-    .eq('ApplicationID', applicationId);
-
-  if (error) return res.status(500).json({ error: error.message });
-  
-  res.json({ success: true, message: 'Application rejected successfully' });
-});
-
-
-/* User Recinds job application */
-router.delete('clientreject/:applicationId', authMiddleware, async (req, res) => {
-  const userId = req.user.id;
-  const { applicationId } = req.params;
-
-  // Check if application exists and is still pending
-  const { data: existingApp, error: checkError } = await supabase
-    .from('JobApplications')
-    .select('Status')
-    .eq('ApplicationID', applicationId)
-    .eq('FreelancerID', userId)
-    .single();
-  
-  if (checkError || !existingApp) {
-    return res.status(404).json({ error: 'Application not found' });
-  }
-
-  if (existingApp.Status !== 'Pending') {
-    return res.status(400).json({ 
-      error: 'Cannot delete application that is no longer pending' 
-    });
-  }
-
-  const { error } = await supabase
-    .from('JobApplications')
-    .delete()
-    .eq('ApplicationID', applicationId)
-    .eq('FreelancerID', userId);
-
-  if (error) return res.status(500).json({ error: error.message });
-  
-  res.json({ success: true, message: 'Application deleted successfully' });
 });
 
 module.exports = router;

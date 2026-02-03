@@ -111,9 +111,51 @@
 .job-posted {
   color: #888;
   font-size: 14px;
+  margin-bottom: 1rem;
+}
+
+.employer-info-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 6px;
   margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #333;
+}
+
+.employer-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1abc9c, #16a085);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+.employer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.employer-label {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.employer-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1abc9c;
 }
 
 .job-description-section h2 {

@@ -59,6 +59,9 @@ function Employers() {
         const data = text ? JSON.parse(text) : {};
         if (cancelled) return;
 
+        console.log('📊 Employer Dashboard Data:', data);
+        console.log('📋 Active Projects Count:', data.activeProjects?.length);
+        console.log('📋 Active Projects:', data.activeProjects);
         setUserData(data.userData ?? SAFE_DEFAULTS);
         setActiveProjects(data.activeProjects ?? []);
         setMessages(data.messages ?? []);
@@ -133,6 +136,210 @@ function Employers() {
   };
   
 
+        e.preventDefault()
+        try {
+            await signOut();
+            navigate('/');
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+  // Post New Project handler
+  const handlePostProject = () => {
+    navigate('/create-projects');
+  };
+
+  if (error) return <div>Error: {error}</div>;
+  if (!userData) return <div>Loading dashboard...</div>;
+
+  // Mock user data
+  /*
+  const userData = {
+    companyName: 'TechStart Inc.',
+    totalProjects: 18,
+    activeProjects: 3,
+    completedProjects: 15,
+    totalSpent: 24500,
+    avgProjectCost: 1360,
+    successRate: 94
+  };
+  
+  // Active projects
+  const activeProjects = [
+    {
+      id: 1,
+      title: 'E-commerce Platform Development',
+      developer: 'Alex Chen',
+      developerAvatar: 'AC',
+      budget: 2500,
+      spent: 1875,
+      progress: 75,
+      deadline: '2 weeks',
+      status: 'In Progress',
+      lastUpdate: '2 hours ago',
+      milestones: { completed: 3, total: 4 },
+      skills: ['React', 'Node.js', 'MongoDB']
+    },
+    {
+      id: 2,
+      title: 'Mobile App UI Redesign',
+      developer: 'Maria Garcia',
+      developerAvatar: 'MG',
+      budget: 1200,
+      spent: 540,
+      progress: 45,
+      deadline: '3 weeks',
+      status: 'In Progress',
+      lastUpdate: '1 day ago',
+      milestones: { completed: 2, total: 5 },
+      skills: ['Figma', 'Mobile Design', 'Prototyping']
+    },
+    {
+      id: 3,
+      title: 'Data Analytics Dashboard',
+      developer: 'James Wilson',
+      developerAvatar: 'JW',
+      budget: 1800,
+      spent: 360,
+      progress: 20,
+      deadline: '4 weeks',
+      status: 'Just Started',
+      lastUpdate: '3 days ago',
+      milestones: { completed: 1, total: 6 },
+      skills: ['Python', 'Dashboard', 'Charts']
+    }
+  ];
+  
+  // Recent applications
+  const recentApplications = [
+    {
+      id: 1,
+      projectTitle: 'WordPress Plugin Development',
+      applicant: 'Sarah Johnson',
+      applicantAvatar: 'SJ',
+      rating: 4.9,
+      experience: '3 years',
+      proposedBudget: 800,
+      timeline: '2 weeks',
+      coverLetter: 'I have extensive experience with WordPress plugin development and have created similar plugins for e-commerce sites...',
+      portfolio: ['WordPress', 'PHP', 'JavaScript'],
+      appliedTime: '2 hours ago'
+    },
+    {
+      id: 2,
+      projectTitle: 'React Component Library',
+      applicant: 'David Kim',
+      applicantAvatar: 'DK',
+      rating: 4.7,
+      experience: '2 years',
+      proposedBudget: 1200,
+      timeline: '3 weeks',
+      coverLetter: 'I specialize in creating reusable React components and have built component libraries for multiple startups...',
+      portfolio: ['React', 'TypeScript', 'Storybook'],
+      appliedTime: '5 hours ago'
+    },
+    {
+      id: 3,
+      projectTitle: 'API Integration Service',
+      applicant: 'Lisa Chen',
+      applicantAvatar: 'LC',
+      rating: 5.0,
+      experience: '4 years',
+      proposedBudget: 600,
+      timeline: '1 week',
+      coverLetter: 'I have experience integrating various APIs including payment gateways, social media APIs, and third-party services...',
+      portfolio: ['Node.js', 'API Integration', 'Express'],
+      appliedTime: '1 day ago'
+    }
+  ];
+  
+  // Messages
+  const messages = [
+    {
+      id: 1,
+      from: 'Alex Chen',
+      fromAvatar: 'AC',
+      project: 'E-commerce Platform',
+      message: 'I\'ve completed the user authentication module. Ready for your review!',
+      time: '30 minutes ago',
+      unread: true,
+      type: 'update'
+    },
+    {
+      id: 2,
+      from: 'Maria Garcia',
+      fromAvatar: 'MG',
+      project: 'Mobile App UI',
+      message: 'Could you clarify the navigation requirements for the settings page?',
+      time: '2 hours ago',
+      unread: true,
+      type: 'question'
+    },
+    {
+      id: 3,
+      from: 'James Wilson',
+      fromAvatar: 'JW',
+      project: 'Analytics Dashboard',
+      message: 'Thank you for the feedback. I\'ll implement the changes today.',
+      time: '1 day ago',
+      unread: false,
+      type: 'response'
+    }
+  ];
+  
+  // Available developers
+  const availableDevelopers = [
+    {
+      id: 1,
+      name: 'Emma Thompson',
+      avatar: 'ET',
+      school: 'Stanford University',
+      year: 'Senior',
+      rating: 4.9,
+      completedProjects: 8,
+      hourlyRate: 28,
+      skills: ['React', 'Vue.js', 'Node.js', 'Python'],
+      specialty: 'Full-Stack Development',
+      availability: 'Available Now',
+      lastActive: '2 hours ago',
+      responseTime: '1 hour',
+      successRate: 100
+    },
+    {
+      id: 2,
+      name: 'Ryan Martinez',
+      avatar: 'RM',
+      school: 'MIT',
+      year: 'Graduate',
+      rating: 4.8,
+      completedProjects: 12,
+      hourlyRate: 32,
+      skills: ['React Native', 'Flutter', 'Swift', 'Kotlin'],
+      specialty: 'Mobile Development',
+      availability: 'Available in 1 week',
+      lastActive: '5 hours ago',
+      responseTime: '2 hours',
+      successRate: 95
+    },
+    {
+      id: 3,
+      name: 'Sophie Chen',
+      avatar: 'SC',
+      school: 'UC Berkeley',
+      year: 'Junior',
+      rating: 4.7,
+      completedProjects: 6,
+      hourlyRate: 25,
+      skills: ['UI Design', 'Figma', 'Prototyping', 'User Research'],
+      specialty: 'UI/UX Design',
+      availability: 'Available Now',
+      lastActive: '1 hour ago',
+      responseTime: '30 minutes',
+      successRate: 98
+    }
+  ];
+  */
   const renderOverview = () => (
     <div className="overview-content">
       {/* Stats Cards */}
@@ -177,49 +384,48 @@ function Employers() {
       <div className="dashboard-section">
         <div className="section-header">
           <h2>Active Projects</h2>
-          <button className="btn-primary" onClick={() => navigate("/dashboard/employers/post-job")}>Post New Project</button>
+          <button className="btn-primary" onClick={handlePostProject}>Post New Project</button>
         </div>
         <div className="projects-overview">
-          {activeProjects.length === 0 && (
-            <div className="project-overview-card">
-              <p>No active projects yet. Post your first project to get started!</p>
+          {activeProjects.length === 0 ? (
+            <div className="empty-state-projects">
+              <p>No active projects yet. Start by posting a new project!</p>
             </div>
-          )}
-          {activeProjects.map(project => (
-            <div key={project.id} className="project-overview-card">
-              <div className="project-overview-header">
-                <h3>{project.title || 'Untitled Project'}</h3>
-                <span className={`status-badge ${String(project.status || '').toLowerCase().replace(' ', '-')}`}>
-                  {project.status || 'Unknown'}
-                </span>
-              </div>
-              <div className="project-overview-meta">
-                <div className="developer-info">
-                  <div className="developer-avatar">{project.developerAvatar || 'D'}</div>
-                  <span>{project.developer || '—'}</span>
-                </div>
-                <div className="budget-info">
-                  <span className="spent">${project.spent ?? 0}</span>
-                  <span className="total">/ ${project.budget ?? 0}</span>
-                </div>
-              </div>
-              <div className="progress-section">
-                <div className="progress-header">
-                  <span>{project.progress ?? 0}% Complete</span>
-                  <span>
-                    {project?.milestones?.completed ?? 0}/{project?.milestones?.total ?? 0} Milestones
+          ) : (
+            activeProjects.map(project => (
+              <div key={project.id} className="project-overview-card">
+                <div className="project-overview-header">
+                  <h3>{project.title}</h3>
+                  <span className={`status-badge ${project.status.toLowerCase().replace(' ', '-')}`}>
+                    {project.status}
                   </span>
                 </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${project.progress ?? 0}%` }}></div>
+                <div className="project-overview-meta">
+                  <div className="developer-info">
+                    <div className="developer-avatar">{project.developerAvatar}</div>
+                    <span>{project.developer}</span>
+                  </div>
+                  <div className="budget-info">
+                    <span className="spent">${project.spent}</span>
+                    <span className="total">/ ${project.budget}</span>
+                  </div>
+                </div>
+                <div className="progress-section">
+                  <div className="progress-header">
+                    <span>{project.progress}% Complete</span>
+                    <span>{project.milestones.completed}/{project.milestones.total} Milestones</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${project.progress}%` }}></div>
+                  </div>
+                </div>
+                <div className="project-overview-actions">
+                  <button className="btn-secondary">View Details</button>
+                  <button className="btn-link">Message Developer</button>
                 </div>
               </div>
-              <div className="project-overview-actions">
-                <button className="btn-secondary">View Details</button>
-                <button className="btn-link">Message Developer</button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
       
@@ -227,7 +433,7 @@ function Employers() {
       <div className="dashboard-section">
         <h2>Quick Actions</h2>
         <div className="quick-actions-grid">
-          <button onClick={() => navigate("/dashboard/employers/post-job")} className="action-item primary">
+          <button className="action-item primary" onClick={handlePostProject}>
             <span className="action-icon">➕</span>
             <span>Post New Project</span>
           </button>
@@ -259,17 +465,17 @@ function Employers() {
             <button className="filter-btn">Completed</button>
             <button className="filter-btn">Pending</button>
           </div>
-          <button onClick={() => navigate("/dashboard/employers/post-job")} className="btn-primary">Post New Project</button>
+          <button className="btn-primary" onClick={handlePostProject}>Post New Project</button>
         </div>
       </div>
       <div className="projects-grid">
-        {activeProjects.length === 0 && (
-          <div className="project-card detailed">
-            <p>No projects found. Post your first project to get started!</p>
+        {activeProjects.length === 0 ? (
+          <div className="empty-state-projects">
+            <p>No projects found. Create your first project to get started!</p>
           </div>
-        )}
-        {activeProjects.map(project => (
-          <div key={project.id} className="project-card detailed">
+        ) : (
+          activeProjects.map(project => (
+            <div key={project.id} className="project-card detailed">
             <div className="project-header">
               <h3>{project.title || 'Untitled Project'}</h3>
               <span className={`status-badge ${String(project.status || '').toLowerCase().replace(' ', '-')}`}>
@@ -319,7 +525,8 @@ function Employers() {
               <button className="btn-primary">Review Progress</button>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

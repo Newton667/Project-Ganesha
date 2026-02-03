@@ -272,6 +272,18 @@ function JobDetails() {
             Posted {job.posted || 'recently'}
           </div>
 
+          {job.employerName && (
+            <div className="employer-info-section">
+              <div className="employer-avatar">
+                {(job.employerName[0] || 'C').toUpperCase()}
+              </div>
+              <div className="employer-details">
+                <span className="employer-label">Posted by</span>
+                <span className="employer-name">{job.employerName}</span>
+              </div>
+            </div>
+          )}
+
           <div className="job-description-section">
             <h2>Project Description</h2>
             <p className="job-description">{job.desc || 'No description provided.'}</p>

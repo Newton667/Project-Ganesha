@@ -33,6 +33,9 @@ function Employers() {
         return res.json();
       })
       .then((data) => {
+        console.log('📊 Employer Dashboard Data:', data);
+        console.log('📋 Active Projects Count:', data.activeProjects?.length);
+        console.log('📋 Active Projects:', data.activeProjects);
         setUserData(data.userData);
         setActiveProjects(data.activeProjects);
         setMessages(data.messages);
@@ -56,6 +59,11 @@ function Employers() {
             console.error(err)
         }
     }
+
+  // Post New Project handler
+  const handlePostProject = () => {
+    navigate('/create-projects');
+  };
 
   if (error) return <div>Error: {error}</div>;
   if (!userData) return <div>Loading dashboard...</div>;
@@ -289,42 +297,48 @@ function Employers() {
       <div className="dashboard-section">
         <div className="section-header">
           <h2>Active Projects</h2>
-          <button className="btn-primary">Post New Project</button>
+          <button className="btn-primary" onClick={handlePostProject}>Post New Project</button>
         </div>
         <div className="projects-overview">
-          {activeProjects.map(project => (
-            <div key={project.id} className="project-overview-card">
-              <div className="project-overview-header">
-                <h3>{project.title}</h3>
-                <span className={`status-badge ${project.status.toLowerCase().replace(' ', '-')}`}>
-                  {project.status}
-                </span>
-              </div>
-              <div className="project-overview-meta">
-                <div className="developer-info">
-                  <div className="developer-avatar">{project.developerAvatar}</div>
-                  <span>{project.developer}</span>
-                </div>
-                <div className="budget-info">
-                  <span className="spent">${project.spent}</span>
-                  <span className="total">/ ${project.budget}</span>
-                </div>
-              </div>
-              <div className="progress-section">
-                <div className="progress-header">
-                  <span>{project.progress}% Complete</span>
-                  <span>{project.milestones.completed}/{project.milestones.total} Milestones</span>
-                </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${project.progress}%` }}></div>
-                </div>
-              </div>
-              <div className="project-overview-actions">
-                <button className="btn-secondary">View Details</button>
-                <button className="btn-link">Message Developer</button>
-              </div>
+          {activeProjects.length === 0 ? (
+            <div className="empty-state-projects">
+              <p>No active projects yet. Start by posting a new project!</p>
             </div>
-          ))}
+          ) : (
+            activeProjects.map(project => (
+              <div key={project.id} className="project-overview-card">
+                <div className="project-overview-header">
+                  <h3>{project.title}</h3>
+                  <span className={`status-badge ${project.status.toLowerCase().replace(' ', '-')}`}>
+                    {project.status}
+                  </span>
+                </div>
+                <div className="project-overview-meta">
+                  <div className="developer-info">
+                    <div className="developer-avatar">{project.developerAvatar}</div>
+                    <span>{project.developer}</span>
+                  </div>
+                  <div className="budget-info">
+                    <span className="spent">${project.spent}</span>
+                    <span className="total">/ ${project.budget}</span>
+                  </div>
+                </div>
+                <div className="progress-section">
+                  <div className="progress-header">
+                    <span>{project.progress}% Complete</span>
+                    <span>{project.milestones.completed}/{project.milestones.total} Milestones</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${project.progress}%` }}></div>
+                  </div>
+                </div>
+                <div className="project-overview-actions">
+                  <button className="btn-secondary">View Details</button>
+                  <button className="btn-link">Message Developer</button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
       
@@ -332,7 +346,7 @@ function Employers() {
       <div className="dashboard-section">
         <h2>Quick Actions</h2>
         <div className="quick-actions-grid">
-          <button className="action-item primary">
+          <button className="action-item primary" onClick={handlePostProject}>
             <span className="action-icon">➕</span>
             <span>Post New Project</span>
           </button>
@@ -364,12 +378,17 @@ function Employers() {
             <button className="filter-btn">Completed</button>
             <button className="filter-btn">Pending</button>
           </div>
-          <button className="btn-primary">Post New Project</button>
+          <button className="btn-primary" onClick={handlePostProject}>Post New Project</button>
         </div>
       </div>
       <div className="projects-grid">
-        {activeProjects.map(project => (
-          <div key={project.id} className="project-card detailed">
+        {activeProjects.length === 0 ? (
+          <div className="empty-state-projects">
+            <p>No projects found. Create your first project to get started!</p>
+          </div>
+        ) : (
+          activeProjects.map(project => (
+            <div key={project.id} className="project-card detailed">
             <div className="project-header">
               <h3>{project.title}</h3>
               <span className={`status-badge ${project.status.toLowerCase().replace(' ', '-')}`}>
@@ -419,7 +438,8 @@ function Employers() {
               <button className="btn-primary">Review Progress</button>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

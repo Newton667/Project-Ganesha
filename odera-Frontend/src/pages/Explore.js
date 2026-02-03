@@ -12,6 +12,8 @@ function Explore() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
+  const [accountType, setAccountType] = useState(null);
+  const [showWarning, setShowWarning] = useState(false);
   const navigate = useNavigate();
   const { session } = UserAuth();
 
@@ -26,6 +28,34 @@ function Explore() {
     { id: 'desktop', label: 'Desktop Apps', cat: 'Desktop Apps' },
     { id: 'devops', label: 'DevOps', cat: 'DevOps' },
   ];
+
+  // Fetch account type
+  useEffect(() => {
+    const token = session?.access_token;
+    if (!token) {
+      setAccountType(null);
+      return;
+    }
+    async function fetchAccountType() {
+      try {
+        const resp = await fetch(`${API_BASE}/api/account-info`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Account info response status:', resp.status);
+        if (resp.ok) {
+          const data = await resp.json();
+          console.log('Account info data:', data);
+          console.log('Account type:', data.accountType);
+          setAccountType(data.accountType);
+        } else {
+          console.error('Failed to fetch account info, status:', resp.status);
+        }
+      } catch (e) {
+        console.error('Failed to fetch account type:', e);
+      }
+    }
+    fetchAccountType();
+  }, [session]);
 
   // Fetch jobs
   useEffect(() => {
@@ -154,9 +184,9 @@ function Explore() {
           <h3 className="service-title">{service.title}</h3>
 
           <div className="seller-info">
-            <div className="avatar">{(primaryLabel[0] || 'A').toUpperCase()}</div>
-            <span className="seller-name">{primaryLabel}</span>
-            <span className="seller-level">{service.urgency ? `Urgency: ${service.urgency}` : '—'}</span>
+            <div className="avatar">{(service.employerName?.[0] || 'C').toUpperCase()}</div>
+            <span className="seller-name">{service.employerName || 'Unknown Company'}</span>
+            <span className="seller-level">{service.urgency ? `Urgency: ${service.urgency}` : primaryLabel}</span>
           </div>
 
           <p className="service-description">{service.desc || 'No description provided.'}</p>
@@ -186,11 +216,34 @@ function Explore() {
   };
 
   const handlePostProject = () => {
-    if (session) {
-      navigate('/create-projects');
-    } else {
+    console.log('Post Project clicked');
+    console.log('Session:', session);
+    console.log('Account Type:', accountType);
+
+    if (!session) {
       navigate('/login');
+      return;
     }
+
+    // Check if user has a freelancer account
+    if (accountType === 'Freelancer') {
+      console.log('Showing warning for freelancer account');
+      setShowWarning(true);
+      return;
+    }
+
+    console.log('Proceeding to create-projects');
+    // For Employer, Both, or Unknown accounts, proceed normally
+    navigate('/create-projects');
+  };
+
+  const handleProceedAnyway = () => {
+    setShowWarning(false);
+    navigate('/create-projects');
+  };
+
+  const handleCancelPost = () => {
+    setShowWarning(false);
   };
 
   const handleJobClick = (jobId) => {
@@ -278,13 +331,44 @@ function Explore() {
         </>
       )}
 
-      <button 
-        className="post-project-btn" 
+      <button
+        className="post-project-btn"
         onClick={handlePostProject}
       >
         <PlusIcon />
         Post New Project
       </button>
+
+      {/* Warning Modal for Freelancer Accounts */}
+      {showWarning && (
+        <div className="warning-modal-overlay" onClick={handleCancelPost}>
+          <div className="warning-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="warning-modal-header">
+              <div className="warning-icon">⚠️</div>
+              <h2>Freelancer Account Warning</h2>
+            </div>
+            <div className="warning-modal-body">
+              <p>
+                You are about to post a job using a <strong>Freelancer account</strong>.
+              </p>
+              <p>
+                For posting jobs, we recommend using an <strong>Employer account</strong> as it provides better features and credibility for job postings.
+              </p>
+              <p className="warning-note">
+                Note: The backend may restrict job posting to employer accounts only.
+              </p>
+            </div>
+            <div className="warning-modal-footer">
+              <button className="btn-cancel" onClick={handleCancelPost}>
+                Cancel
+              </button>
+              <button className="btn-proceed" onClick={handleProceedAnyway}>
+                Proceed Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -23,62 +23,89 @@ router.get('/', authMiddleware, async (req, res) => {
 
     const profile = employerData.EmployerProfiles?.[0] || {};
 
+    // 2. Jobs created by this employer
+    // Pulls jobs posted by this employer from the Jobs table.
+    const { data: jobs, error: jobsErr } = await supabase
+      .from('Jobs')
+      .select('JobID, JobTitle, BudgetMin, BudgetMax, Duration, JobCreated, FreelancerID')
+      .eq('EmployerID', employerData.EmployerID)
+      .order('JobCreated', { ascending: false });
+
+    if (jobsErr) {
+      console.error('Error fetching jobs:', jobsErr);
+      throw jobsErr;
+    }
+
+    // Calculate actual counts from jobs
+    const totalJobs = (jobs || []).length;
+    const openJobs = (jobs || []).filter(j => !j.FreelancerID).length;
+    const assignedJobs = (jobs || []).filter(j => j.FreelancerID).length;
+
     const userData = {
       companyName: employerData.CompanyName,
-      totalProjects: profile.TotalProjects || 0,
-      activeProjects: profile.ActiveProjects || 0,
-      completedProjects: profile.CompletedProjects || 0,
+      totalProjects: totalJobs,
+      activeProjects: openJobs,
+      completedProjects: assignedJobs,
       totalSpent: profile.TotalSpent || 0,
       avgProjectCost: profile.AvgProjectCost || 0,
       successRate: profile.SuccessRate || 0
     };
 
-    // 2. Active projects
-    // Pulls contracts for this employer from the Contracts table.
-    const { data: contracts, error: contractErr } = await supabase
-      .from('Contracts')
-      .select(`
-        ContractID, JobID, Progress, BudgetSpent, PricingMax, Status, LastUpdate,
-        Jobs(JobTitle, Duration),
-        Freelancers(FirstName, LastName),
-        ProjectMilestones(IsComplete)
-      `)
-      .eq('EmployerID', employerData.EmployerID);
+    // Get application counts for each job
+    const jobIds = (jobs || []).map(j => j.JobID);
+    let applicationCounts = {};
 
-    if (contractErr) throw contractErr;
+    if (jobIds.length > 0) {
+      const { data: appCounts, error: appCountErr } = await supabase
+        .from('JobApplications')
+        .select('JobID')
+        .in('JobID', jobIds);
 
-    const activeProjects = contracts.map(c => {
-      const milestones = c.ProjectMilestones || [];
-      const completed = milestones.filter(m => m.IsComplete).length;
+      if (!appCountErr && appCounts) {
+        // Count applications per job
+        appCounts.forEach(app => {
+          applicationCounts[app.JobID] = (applicationCounts[app.JobID] || 0) + 1;
+        });
+      }
+    }
+
+    const activeProjects = (jobs || []).map(j => {
+      const applicationCount = applicationCounts[j.JobID] || 0;
+      // Determine status based on whether a freelancer is assigned
+      const status = j.FreelancerID ? 'Assigned' : 'Open';
       return {
-        id: c.ContractID,
-        title: c.Jobs?.JobTitle || 'Untitled Project',
-        developer: `${c.Freelancers?.FirstName || ''} ${c.Freelancers?.LastName || ''}`.trim(),
-        developerAvatar: (c.Freelancers?.FirstName?.[0] || '') + (c.Freelancers?.LastName?.[0] || ''),
-        budget: c.PricingMax || 0,
-        spent: c.BudgetSpent || 0,
-        progress: c.Progress || 0,
-        deadline: c.Jobs?.Duration || 'Unknown',
-        status: c.Status,
-        lastUpdate: dayjs(c.LastUpdate).fromNow(),
-        milestones: { completed, total: milestones.length },
+        id: j.JobID,
+        title: j.JobTitle || 'Untitled Job',
+        developer: j.FreelancerID ? 'Hired' : 'No hire yet',
+        developerAvatar: j.FreelancerID ? '✓' : '📋',
+        budget: j.BudgetMax || j.BudgetMin || 0,
+        spent: 0, // No spending until hired
+        progress: 0, // No progress until hired
+        deadline: j.Duration || 'Not specified',
+        status: status,
+        lastUpdate: dayjs(j.JobCreated).fromNow(),
+        milestones: { completed: 0, total: applicationCount },
         skills: [] // Could join JobSkills table if needed
       };
     });
 
     // 3. Recent applications
-    // Gets all applications for the jobs this employer owns.
-    const { data: applications, error: appsErr } = await supabase
-      .from('JobApplications')
-      .select(`
-        ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter,
-        Jobs(JobTitle),
-        Freelancers(FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty)),
-        FreelancerSkills(Skill)
-      `)
-      .in('JobID', contracts.map(c => c.JobID));
+    // Gets all applications for the jobs this employer posted.
+    let applications = [];
+    if (jobs && jobs.length > 0) {
+      const { data: appsData, error: appsErr } = await supabase
+        .from('JobApplications')
+        .select(`
+          ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter,
+          Jobs(JobTitle),
+          Freelancers(FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty)),
+          FreelancerSkills(Skill)
+        `)
+        .in('JobID', jobs.map(j => j.JobID));
 
-    if (appsErr) throw appsErr;
+      if (appsErr) throw appsErr;
+      applications = appsData || [];
+    }
 
     const recentApplications = applications.map(a => ({
       id: a.ApplicationID,

@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
 
     let query = supabase
       .from('Jobs')
-      .select('*', { count: 'exact' });
+      .select('*, Employers(CompanyName)', { count: 'exact' });
 
     // Filters
     if (q && String(q).trim()) {
@@ -82,6 +82,7 @@ router.get('/', async (req, res) => {
       category: j.JobCat || null,
       urgency: j.Urgency || null,
       employerId: j.EmployerID || null,
+      employerName: j.Employers?.CompanyName || 'Unknown Company',
       freelancerId: j.FreelancerID || null,
       duration: j.Duration || null,
       price: num(j.JobPrice),
@@ -110,7 +111,7 @@ router.get('/:id', async (req, res) => {
     const jobId = req.params.id;
     const { data, error } = await supabase
       .from('Jobs')
-      .select('*')
+      .select('*, Employers(CompanyName)')
       .eq('JobID', jobId)
       .maybeSingle();
 
@@ -128,6 +129,7 @@ router.get('/:id', async (req, res) => {
       category: j.JobCat || null,
       urgency: j.Urgency || null,
       employerId: j.EmployerID || null,
+      employerName: j.Employers?.CompanyName || 'Unknown Company',
       freelancerId: j.FreelancerID || null,
       duration: j.Duration || null,
       price: num(j.JobPrice),

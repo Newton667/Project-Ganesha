@@ -27,6 +27,31 @@ function Freelancers() {
   const [earningsData, setEarningsData] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [accountType, setAccountType] = useState(null);
+  const [showWarning, setShowWarning] = useState(false);
+
+  // Fetch account type
+  useEffect(() => {
+    const token = session?.access_token;
+    if (!token) {
+      setAccountType(null);
+      return;
+    }
+    async function fetchAccountType() {
+      try {
+        const resp = await fetch('/api/account-info', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          setAccountType(data.accountType);
+        }
+      } catch (e) {
+        console.error('Failed to fetch account type:', e);
+      }
+    }
+    fetchAccountType();
+  }, [session]);
 
   // Load data when session becomes available
   useEffect(() => {
@@ -95,6 +120,31 @@ function Freelancers() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handlePostJob = () => {
+    if (!session) {
+      navigate('/login');
+      return;
+    }
+
+    // Check if user has a freelancer account
+    if (accountType === 'Freelancer') {
+      setShowWarning(true);
+      return;
+    }
+
+    // For Employer, Both, or Unknown accounts, proceed normally
+    navigate('/create-projects');
+  };
+
+  const handleProceedAnyway = () => {
+    setShowWarning(false);
+    navigate('/create-projects');
+  };
+
+  const handleCancelPost = () => {
+    setShowWarning(false);
   };
 
   const renderOverview = () => (
@@ -227,6 +277,10 @@ function Freelancers() {
           </div>
         </div>
         <div className="header-actions">
+          <button className="post-job-btn" onClick={handlePostJob}>
+            <span className="plus-icon">+</span>
+            Post New Job
+          </button>
           <button className="notification-btn">
             <span className="notification-icon">🔔</span>
             <span className="notification-count">3</span>
@@ -249,6 +303,37 @@ function Freelancers() {
       <div className="dashboard-content">
         {renderContent()}
       </div>
+
+      {/* Warning Modal for Freelancer Accounts */}
+      {showWarning && (
+        <div className="warning-modal-overlay" onClick={handleCancelPost}>
+          <div className="warning-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="warning-modal-header">
+              <div className="warning-icon">⚠️</div>
+              <h2>Freelancer Account Warning</h2>
+            </div>
+            <div className="warning-modal-body">
+              <p>
+                You are about to post a job using a <strong>Freelancer account</strong>.
+              </p>
+              <p>
+                For posting jobs, we recommend using an <strong>Employer account</strong> as it provides better features and credibility for job postings.
+              </p>
+              <p className="warning-note">
+                Note: The backend may restrict job posting to employer accounts only.
+              </p>
+            </div>
+            <div className="warning-modal-footer">
+              <button className="btn-cancel" onClick={handleCancelPost}>
+                Cancel
+              </button>
+              <button className="btn-proceed" onClick={handleProceedAnyway}>
+                Proceed Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

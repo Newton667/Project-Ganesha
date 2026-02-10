@@ -134,16 +134,6 @@ function Employers() {
       alert(`Error: ${err.message}`);
     }
   };
-  
-
-        e.preventDefault()
-        try {
-            await signOut();
-            navigate('/');
-        } catch (err) {
-            console.error(err)
-        }
-    }
 
   // Post New Project handler
   const handlePostProject = () => {

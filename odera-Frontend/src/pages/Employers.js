@@ -103,6 +103,31 @@ function Employers() {
     }
   };
 
+  const handleMarkAsRead = async (messageId) => {
+    if (!session?.access_token) return;
+
+    try {
+      const res = await fetch(`/api/employerDashboard/read/${messageId}`, {
+        method: 'PATCH',
+        headers: { 
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (!res.ok) throw new Error('Failed to update message status');
+
+      // Optimistic UI Update: update the local state immediately
+      setMessages(prevMessages =>
+        prevMessages.map(msg => 
+          msg.id === messageId ? { ...msg, unread: false } : msg
+        )
+      );
+    } catch (err) {
+      console.error("Error marking message as read:", err);
+    }
+  };
+
   const handleRejectApplication = async (applicationId) => {
     if (!session?.access_token) {
       console.error("No session token found.");
@@ -143,193 +168,6 @@ function Employers() {
   if (error) return <div>Error: {error}</div>;
   if (!userData) return <div>Loading dashboard...</div>;
 
-  // Mock user data
-  /*
-  const userData = {
-    companyName: 'TechStart Inc.',
-    totalProjects: 18,
-    activeProjects: 3,
-    completedProjects: 15,
-    totalSpent: 24500,
-    avgProjectCost: 1360,
-    successRate: 94
-  };
-  
-  // Active projects
-  const activeProjects = [
-    {
-      id: 1,
-      title: 'E-commerce Platform Development',
-      developer: 'Alex Chen',
-      developerAvatar: 'AC',
-      budget: 2500,
-      spent: 1875,
-      progress: 75,
-      deadline: '2 weeks',
-      status: 'In Progress',
-      lastUpdate: '2 hours ago',
-      milestones: { completed: 3, total: 4 },
-      skills: ['React', 'Node.js', 'MongoDB']
-    },
-    {
-      id: 2,
-      title: 'Mobile App UI Redesign',
-      developer: 'Maria Garcia',
-      developerAvatar: 'MG',
-      budget: 1200,
-      spent: 540,
-      progress: 45,
-      deadline: '3 weeks',
-      status: 'In Progress',
-      lastUpdate: '1 day ago',
-      milestones: { completed: 2, total: 5 },
-      skills: ['Figma', 'Mobile Design', 'Prototyping']
-    },
-    {
-      id: 3,
-      title: 'Data Analytics Dashboard',
-      developer: 'James Wilson',
-      developerAvatar: 'JW',
-      budget: 1800,
-      spent: 360,
-      progress: 20,
-      deadline: '4 weeks',
-      status: 'Just Started',
-      lastUpdate: '3 days ago',
-      milestones: { completed: 1, total: 6 },
-      skills: ['Python', 'Dashboard', 'Charts']
-    }
-  ];
-  
-  // Recent applications
-  const recentApplications = [
-    {
-      id: 1,
-      projectTitle: 'WordPress Plugin Development',
-      applicant: 'Sarah Johnson',
-      applicantAvatar: 'SJ',
-      rating: 4.9,
-      experience: '3 years',
-      proposedBudget: 800,
-      timeline: '2 weeks',
-      coverLetter: 'I have extensive experience with WordPress plugin development and have created similar plugins for e-commerce sites...',
-      portfolio: ['WordPress', 'PHP', 'JavaScript'],
-      appliedTime: '2 hours ago'
-    },
-    {
-      id: 2,
-      projectTitle: 'React Component Library',
-      applicant: 'David Kim',
-      applicantAvatar: 'DK',
-      rating: 4.7,
-      experience: '2 years',
-      proposedBudget: 1200,
-      timeline: '3 weeks',
-      coverLetter: 'I specialize in creating reusable React components and have built component libraries for multiple startups...',
-      portfolio: ['React', 'TypeScript', 'Storybook'],
-      appliedTime: '5 hours ago'
-    },
-    {
-      id: 3,
-      projectTitle: 'API Integration Service',
-      applicant: 'Lisa Chen',
-      applicantAvatar: 'LC',
-      rating: 5.0,
-      experience: '4 years',
-      proposedBudget: 600,
-      timeline: '1 week',
-      coverLetter: 'I have experience integrating various APIs including payment gateways, social media APIs, and third-party services...',
-      portfolio: ['Node.js', 'API Integration', 'Express'],
-      appliedTime: '1 day ago'
-    }
-  ];
-  
-  // Messages
-  const messages = [
-    {
-      id: 1,
-      from: 'Alex Chen',
-      fromAvatar: 'AC',
-      project: 'E-commerce Platform',
-      message: 'I\'ve completed the user authentication module. Ready for your review!',
-      time: '30 minutes ago',
-      unread: true,
-      type: 'update'
-    },
-    {
-      id: 2,
-      from: 'Maria Garcia',
-      fromAvatar: 'MG',
-      project: 'Mobile App UI',
-      message: 'Could you clarify the navigation requirements for the settings page?',
-      time: '2 hours ago',
-      unread: true,
-      type: 'question'
-    },
-    {
-      id: 3,
-      from: 'James Wilson',
-      fromAvatar: 'JW',
-      project: 'Analytics Dashboard',
-      message: 'Thank you for the feedback. I\'ll implement the changes today.',
-      time: '1 day ago',
-      unread: false,
-      type: 'response'
-    }
-  ];
-  
-  // Available developers
-  const availableDevelopers = [
-    {
-      id: 1,
-      name: 'Emma Thompson',
-      avatar: 'ET',
-      school: 'Stanford University',
-      year: 'Senior',
-      rating: 4.9,
-      completedProjects: 8,
-      hourlyRate: 28,
-      skills: ['React', 'Vue.js', 'Node.js', 'Python'],
-      specialty: 'Full-Stack Development',
-      availability: 'Available Now',
-      lastActive: '2 hours ago',
-      responseTime: '1 hour',
-      successRate: 100
-    },
-    {
-      id: 2,
-      name: 'Ryan Martinez',
-      avatar: 'RM',
-      school: 'MIT',
-      year: 'Graduate',
-      rating: 4.8,
-      completedProjects: 12,
-      hourlyRate: 32,
-      skills: ['React Native', 'Flutter', 'Swift', 'Kotlin'],
-      specialty: 'Mobile Development',
-      availability: 'Available in 1 week',
-      lastActive: '5 hours ago',
-      responseTime: '2 hours',
-      successRate: 95
-    },
-    {
-      id: 3,
-      name: 'Sophie Chen',
-      avatar: 'SC',
-      school: 'UC Berkeley',
-      year: 'Junior',
-      rating: 4.7,
-      completedProjects: 6,
-      hourlyRate: 25,
-      skills: ['UI Design', 'Figma', 'Prototyping', 'User Research'],
-      specialty: 'UI/UX Design',
-      availability: 'Available Now',
-      lastActive: '1 hour ago',
-      responseTime: '30 minutes',
-      successRate: 98
-    }
-  ];
-  */
   const renderOverview = () => (
     <div className="overview-content">
       {/* Stats Cards */}
@@ -607,36 +445,41 @@ function Employers() {
         <button className="btn-primary">Compose Message</button>
       </div>
       <div className="messages-list">
-        {messages.length === 0 && (
-          <div className="message-item">
-            <p>No messages yet. Your developer communications will appear here.</p>
-          </div>
-        )}
-        {messages.map(message => (
-          <div key={message.id} className={`message-item ${message.unread ? 'unread' : ''}`}>
-            <div className="message-header">
-              <div className="sender-info">
-                <div className="sender-avatar">{message.fromAvatar || 'S'}</div>
-                <div className="sender-details">
-                  <h3>{message.from || 'Unknown Sender'}</h3>
-                  <span className="project-ref">Re: {message.project || 'Unknown Project'}</span>
+        {messages.length === 0 ? (
+          <div className="message-item"><p>No messages yet.</p></div>
+        ) : (
+          messages.map(message => (
+            <div 
+              key={message.id} 
+              className={`message-item ${message.unread ? 'unread-style' : ''}`}
+            >
+              <div className="message-header">
+                <div className="sender-info">
+                  <div className="sender-avatar">{message.fromAvatar}</div>
+                  <div className="sender-details">
+                    <h3>{message.from}</h3>
+                    <span className="project-ref">Project: {message.project}</span>
+                  </div>
+                </div>
+                <div className="message-meta">
+                  <span className="message-time">{message.time}</span>
                 </div>
               </div>
-              <div className="message-meta">
-                <span className={`message-type ${message.type || 'message'}`}>
-                  {message.type || 'message'}
-                </span>
-                <span className="message-time">{message.time || '—'}</span>
+              <p className="message-content">{message.message}</p>
+              <div className="message-actions">
+                <button className="btn-secondary">Reply</button>
+                {message.unread && (
+                  <button 
+                    className="btn-link" 
+                    onClick={() => handleMarkAsRead(message.id)}
+                  >
+                    Mark as Read
+                  </button>
+                )}
               </div>
             </div>
-            <p className="message-content">{message.message || 'No message content'}</p>
-            <div className="message-actions">
-              <button className="btn-secondary">Reply</button>
-              <button className="btn-link">View Project</button>
-              {message.unread && <button className="btn-link">Mark as Read</button>}
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -758,6 +601,8 @@ function Employers() {
   }
 
   const unreadMessages = messages.filter(msg => msg.unread).length;
+  // Calculate unread count for the sidebar/tab badge
+  const unreadCount = messages.filter(m => m.unread).length;
   const pendingApplications = recentApplications.length;
 
   return (

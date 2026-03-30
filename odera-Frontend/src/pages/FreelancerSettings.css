@@ -1,0 +1,121 @@
+/* EmployerSettings.css */
+
+/* Make all text white */
+* {
+    color: white;
+}
+
+/* Container styling */
+.freelancer-settings {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Header styling */
+.freelancer-settings h2 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+/* Form styling */
+.freelancer-settings form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Input and textarea styling */
+.freelancer-settings input,
+.freelancer-settings textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    color: black;
+}
+
+.freelancer-settings input::placeholder,
+.freelancer-settings textarea::placeholder {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+/* Textarea specific styling */
+.freelancer-settings textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Checkbox styling */
+.freelancer-settings label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.freelancer-settings input[type="checkbox"] {
+    width: auto;
+}
+
+/* Button styling */
+.freelancer-settings button {
+    padding: 12px 20px;
+    background-color: #1abc9c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.freelancer-settings button:hover {
+    background-color: #0056b3;
+}
+
+.freelancer-settings button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Error and success message styling */
+.freelancer-settings .error {
+    color: #ff6b6b;
+    margin: 10px 0;
+}
+
+.freelancer-settings .success {
+    color: #51cf66;
+    margin: 10px 0;
+}
+
+/* Loading text */
+.freelancer-settings .loading {
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Debug section styling */
+.freelancer-settings details {
+    margin: 20px 0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.freelancer-settings details summary {
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.freelancer-settings details pre {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 12px;
+}

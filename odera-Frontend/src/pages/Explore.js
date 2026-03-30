@@ -14,6 +14,7 @@ function Explore() {
   const [page, setPage] = useState(1);
   const [accountType, setAccountType] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
   const navigate = useNavigate();
   const { session } = UserAuth();
 
@@ -329,6 +330,33 @@ function Explore() {
             </button>
           </div>
         </>
+      )}
+
+      {selectedJob && (
+        <div className="job-modal">
+          <div className="job-modal-content">
+            <button className="close-btn" onClick={() => setSelectedJob(null)}>✖</button>
+
+            <h2>{selectedJob.title}</h2>
+            <p>{selectedJob.desc || "No description provided."}</p>
+
+            <div className="job-meta">
+              <strong>Budget:</strong> {prettyBudget(selectedJob.budget)}<br/>
+              <strong>Urgency:</strong> {selectedJob.urgency || "—"}<br/>
+              <strong>Categories:</strong> {selectedJob.category || selectedJob.JobCat || "—"}
+            </div>
+
+            <button
+              className="apply-btn"
+              onClick={() => {
+                setSelectedJob(null);
+                window.location.href = `/apply/${selectedJob.id}`;
+              }}
+            >
+              Apply for Contract
+            </button>
+          </div>
+        </div>
       )}
 
       <button

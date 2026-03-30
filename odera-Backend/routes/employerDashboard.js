@@ -107,43 +107,56 @@ router.get('/', authMiddleware, async (req, res) => {
       applications = appsData || [];
     }
 
-    const recentApplications = applications.map(a => ({
-      id: a.ApplicationID,
-      projectTitle: a.Jobs?.JobTitle || '',
-      applicant: `${a.Freelancers?.FirstName || ''} ${a.Freelancers?.LastName || ''}`.trim(),
-      applicantAvatar: (a.Freelancers?.FirstName?.[0] || '') + (a.Freelancers?.LastName?.[0] || ''),
-      rating: a.Freelancers?.FreelancerProfile?.Rating || 0,
-      experience: a.Experience || 'Unknown',
-      proposedBudget: a.Rating || 0,
-      timeline: a.Timeline || '',
-      coverLetter: a.CoverLetter || '',
-      portfolio: (a.FreelancerSkills || []).map(s => s.Skill),
-      appliedTime: 'N/A' // Would require an application timestamp column
-    }));
+  const recentApplications = applications.map(a => ({
+    id: a.ApplicationID,
+    projectTitle: a.Jobs?.JobTitle || '',
+    applicant: `${a.Freelancers?.FirstName || ''} ${a.Freelancers?.LastName || ''}`.trim(),
+    applicantAvatar: (a.Freelancers?.FirstName?.[0] || '') + (a.Freelancers?.LastName?.[0] || ''),
+    rating: a.Freelancers?.FreelancerProfile?.Rating || 0,
+    experience: a.Experience || 'Unknown',
+    proposedBudget: a.Rating || 0,
+    timeline: a.Timeline || '',
+    coverLetter: a.CoverLetter || '',
+    portfolio: (a.FreelancerSkills || []).map(s => s.Skill),
+    appliedTime: 'N/A' // Would require an application timestamp column
+  }));
 
-    // 4. Messages
-    /*
+
+    // 4. Messages (Revised with your specific schema constraint names)
     const { data: messagesData, error: msgErr } = await supabase
       .from('Messages')
       .select(`
-        messageid, senderid, projectid, content, timestamp, isunread, type,
-        sender:auth.users(full_name)
+        messageid, 
+        content, 
+        timestamp, 
+        isunread, 
+        type,
+        project:Jobs(JobTitle),
+        sender_employer:Employers!Messages_senderid_fkey1(FirstName, LastName),
+        sender_freelancer:Freelancers!Messages_senderid_fkey2(FirstName, LastName)
       `)
-      .eq('receiverid', userId);
+      .eq('receiverid', userId)
+      .order('timestamp', { ascending: false });
 
     if (msgErr) throw msgErr;
 
-    const messages = messagesData.map(m => ({
-      id: m.messageid,
-      from: m.sender?.full_name || 'Unknown',
-      fromAvatar: (m.sender?.full_name?.split(' ')[0]?.[0] || '') + (m.sender?.full_name?.split(' ')[1]?.[0] || ''),
-      project: '', // Need join to Jobs or Contracts for name
-      message: m.content,
-      time: dayjs(m.timestamp).fromNow(),
-      unread: m.isunread,
-      type: m.type
-    }));
-    */
+    const messages = (messagesData || []).map(m => {
+      // Use whichever join returned data (one will be null)
+      const sender = m.sender_freelancer || m.sender_employer;
+      const firstName = sender?.FirstName || 'Unknown';
+      const lastName = sender?.LastName || 'User';
+
+      return {
+        id: m.messageid,
+        from: `${firstName} ${lastName}`,
+        fromAvatar: firstName[0] + (lastName[0] || ''),
+        project: m.project?.JobTitle || 'General Inquiry',
+        message: m.content,
+        time: dayjs(m.timestamp).fromNow(),
+        unread: m.isunread,
+        type: m.type
+      };
+    });
 
     // 5. Available developers
     // Pulls all freelancer profiles where availability is not 'Unavailable'
@@ -184,6 +197,22 @@ router.get('/', authMiddleware, async (req, res) => {
       availableDevelopers
     });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark a message as read
+router.patch('/read/:messageid', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('Messages')
+      .update({ isunread: false })
+      .eq('messageid', req.params.messageid)
+      .eq('receiverid', req.user.id); 
+
+    if (error) throw error;
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

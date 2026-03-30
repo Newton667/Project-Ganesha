@@ -92,7 +92,7 @@ function Freelancers() {
         if (cancelled) return;
         console.error('[Freelancers] fetch error:', err);
         setError(err.message || 'Unknown error');
-        // Keep UI usable
+        // Keep UI usable with defaults
         setUserData(SAFE_DEFAULTS);
         setActiveProjects([]);
         setMessages([]);
@@ -105,7 +105,7 @@ function Freelancers() {
 
     load();
     return () => { cancelled = true; };
-  }, [session]); // re-run when session changes
+  }, [session]);
 
   const initials = useMemo(() => {
     const [first, last] = (userData?.name || 'User').split(' ');
@@ -195,14 +195,16 @@ function Freelancers() {
         </div>
         <div className="projects-list">
           {activeProjects.length === 0 && (
-            <div className="project-card"><p>No active projects yet.</p></div>
+            <div className="project-card">
+              <p>No active projects yet. Check out the opportunities section to find new work!</p>
+            </div>
           )}
           {activeProjects.map(project => (
             <div key={project.id} className="project-card">
               <div className="project-header">
                 <h3>{project.title}</h3>
                 <span className={`status-badge ${String(project.status || '').toLowerCase().replace(' ', '-')}`}>
-                  {project.status || '—'}
+                  {project.status || 'Unknown'}
                 </span>
               </div>
               <div className="project-details">
@@ -232,11 +234,11 @@ function Freelancers() {
       <div className="dashboard-section">
         <h2>Quick Actions</h2>
         <div className="quick-actions-grid">
-          <button className="action-item">
+          <button className="action-item" onClick={() => setActiveSection('profile')}>
             <span className="action-icon">👤</span>
             <span>Update Profile</span>
           </button>
-          <button className="action-item">
+          <button className="action-item" onClick={() => setActiveSection('opportunities')}>
             <span className="action-icon">💼</span>
             <span>Browse Projects</span>
           </button>
@@ -244,7 +246,7 @@ function Freelancers() {
             <span className="action-icon">📊</span>
             <span>View Analytics</span>
           </button>
-          <button className="action-item">
+          <button className="action-item" onClick={() => setActiveSection('messages')}>
             <span className="action-icon">💬</span>
             <span>Messages</span>
           </button>
@@ -253,15 +255,183 @@ function Freelancers() {
     </div>
   );
 
+  const renderProjects = () => (
+    <div className="projects-content">
+      <div className="section-header">
+        <h2>My Projects</h2>
+        <div className="project-filters">
+          <button className="filter-btn active">All</button>
+          <button className="filter-btn">Active</button>
+          <button className="filter-btn">Completed</button>
+          <button className="filter-btn">Pending</button>
+        </div>
+      </div>
+      <div className="projects-grid">
+        {activeProjects.length === 0 && (
+          <div className="project-card">
+            <p>No projects found. Start browsing opportunities to find your first project!</p>
+          </div>
+        )}
+        {activeProjects.map(project => (
+          <div key={project.id} className="project-card detailed">
+            <div className="project-header">
+              <h3>{project.title}</h3>
+              <span className={`status-badge ${String(project.status || '').toLowerCase().replace(' ', '-')}`}>
+                {project.status || 'Unknown'}
+              </span>
+            </div>
+            <div className="project-meta">
+              <div className="meta-item">
+                <span className="meta-label">Client</span>
+                <span className="meta-value">{project.client || '—'}</span>
+              </div>
+              <div className="meta-item">
+                <span className="meta-label">Budget</span>
+                <span className="meta-value">${project.budget ?? '—'}</span>
+              </div>
+              <div className="meta-item">
+                <span className="meta-label">Deadline</span>
+                <span className="meta-value">{project.deadline || '—'}</span>
+              </div>
+              <div className="meta-item">
+                <span className="meta-label">Progress</span>
+                <span className="meta-value">{project.progress ?? 0}%</span>
+              </div>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${project.progress ?? 0}%` }} />
+            </div>
+            <div className="project-actions">
+              <button className="btn-secondary">Message Client</button>
+              <button className="btn-primary">Open Project</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderMessages = () => (
+    <div className="messages-content">
+      <div className="section-header">
+        <h2>Messages</h2>
+        <button className="btn-primary">Compose</button>
+      </div>
+      <div className="messages-list">
+        {messages.length === 0 && (
+          <div className="message-item">
+            <p>No messages yet. Your client communications will appear here.</p>
+          </div>
+        )}
+        {messages.map(message => (
+          <div key={message.id} className={`message-item ${message.unread ? 'unread' : ''}`}>
+            <div className="message-header">
+              <h3>{message.client || 'Unknown Client'}</h3>
+              <span className="message-time">{message.time || '—'}</span>
+            </div>
+            <p className="message-preview">{message.message || 'No message content'}</p>
+            <div className="message-actions">
+              <button className="btn-secondary">Reply</button>
+              <button className="btn-link">Mark as Read</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderOpportunities = () => (
+    <div className="opportunities-content">
+      <div className="section-header">
+        <h2>Available Opportunities</h2>
+        <div className="opportunity-filters">
+          <select className="filter-select">
+            <option>All Categories</option>
+            <option>Web Development</option>
+            <option>Mobile Apps</option>
+            <option>Design</option>
+          </select>
+          <select className="filter-select">
+            <option>All Budgets</option>
+            <option>Under $500</option>
+            <option>$500-$1000</option>
+            <option>$1000+</option>
+          </select>
+        </div>
+      </div>
+      <div className="opportunities-list">
+        {opportunities.length === 0 && (
+          <div className="opportunity-item">
+            <p>No opportunities available at the moment. Check back later for new projects!</p>
+          </div>
+        )}
+        {opportunities.map(opportunity => (
+          <div key={opportunity.id} className={`opportunity-item urgency-${opportunity.urgency || 'low'}`}>
+            <div className="opportunity-header">
+              <h3>{opportunity.title || 'Untitled Project'}</h3>
+              <span className="budget">{opportunity.budget || 'Budget TBD'}</span>
+            </div>
+            <div className="opportunity-meta">
+              <span className="client">by {opportunity.client || 'Anonymous Client'}</span>
+              <span className="duration">{opportunity.duration || 'Duration TBD'}</span>
+              <span className="posted">{opportunity.posted || 'Recently posted'}</span>
+            </div>
+            <div className="skills-required">
+              {(opportunity.skills || []).map((skill, index) => (
+                <span key={index} className="skill-tag">{skill}</span>
+              ))}
+            </div>
+            <div className="opportunity-footer">
+              <span className="proposals">{opportunity.proposals ?? 0} proposals</span>
+              <div className="opportunity-actions">
+                <button className="btn-secondary">Save</button>
+                <button className="btn-primary">Apply Now</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeSection) {
       case 'overview': return renderOverview();
+      case 'projects': return renderProjects();
+      case 'messages': return renderMessages();
+      case 'opportunities': return renderOpportunities();
       default: return renderOverview();
     }
   };
 
-  if (loading) return <div style={{ color: 'white', padding: '2rem' }}>Loading dashboard...</div>;
-  if (error)   return <div style={{ color: 'red',   padding: '2rem' }}>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="freelancer-dashboard">
+        <div style={{ color: 'white', padding: '2rem', textAlign: 'center' }}>
+          Loading dashboard...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="employer-dashboard">
+        <div style={{ color: 'red', padding: '2rem', textAlign: 'center' }}>
+          <h3>Error loading dashboard</h3>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const unreadMessages = messages.filter(msg => msg.unread).length;
 
   return (
     <div className="freelancer-dashboard">
@@ -285,6 +455,9 @@ function Freelancers() {
             <span className="notification-icon">🔔</span>
             <span className="notification-count">3</span>
           </button>
+          <button className="profile-btn" onClick={() => navigate("/dashboard/freelancers/settings")}>
+            Settings
+          </button>
           <button className="profile-btn" onClick={handleSignOut}>Sign Out</button>
         </div>
       </div>
@@ -295,7 +468,31 @@ function Freelancers() {
           className={`nav-item ${activeSection === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveSection('overview')}
         >
-          <span className="nav-icon">📊</span> Overview
+          <span className="nav-icon">📊</span>
+          Overview
+        </button>
+        <button
+          className={`nav-item ${activeSection === 'projects' ? 'active' : ''}`}
+          onClick={() => setActiveSection('projects')}
+        >
+          <span className="nav-icon">📋</span>
+          My Projects
+          <span className="nav-badge">{userData?.activeProjects ?? 0}</span>
+        </button>
+        <button
+          className={`nav-item ${activeSection === 'messages' ? 'active' : ''}`}
+          onClick={() => setActiveSection('messages')}
+        >
+          <span className="nav-icon">💬</span>
+          Messages
+          {unreadMessages > 0 && <span className="nav-badge">{unreadMessages}</span>}
+        </button>
+        <button
+          className={`nav-item ${activeSection === 'opportunities' ? 'active' : ''}`}
+          onClick={() => setActiveSection('opportunities')}
+        >
+          <span className="nav-icon">🔍</span>
+          Opportunities
         </button>
       </div>
 

@@ -407,6 +407,26 @@ body {
   color: #1abc9c;
 }
 
+.btn-link:hover {
+  color: #1abc9c;
+}
+
+.btn-reject {
+  background-color: #e74c3c;;
+  color: white;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-reject:hover {
+  background-color: #9c4d44;
+  color: white;
+}
+
 /* Quick Actions Grid */
 .quick-actions-grid {
   display: grid;
@@ -743,6 +763,7 @@ body {
   justify-content: flex-end;
 }
 
+
 /* Messages Content */
 .messages-list {
   display: flex;
@@ -761,6 +782,20 @@ body {
 .message-item.unread {
   border-left: 4px solid #1abc9c;
   background-color: rgba(26, 188, 156, 0.05);
+}
+
+.message-item.unread-style {
+  background-color: #f0f7ff; /* Light blue tint */
+  border-left: 4px solid #007bff; /* Accent bar */
+}
+
+.nav-badge {
+  background-color: #ff4d4f;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  margin-left: 8px;
 }
 
 .message-header {

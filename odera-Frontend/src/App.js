@@ -10,8 +10,13 @@ import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
+import PublicRoute from './components/PublicRoute';
 import Employers from './pages/Employers';
 import Freelancers from './pages/Freelancers';
+import FreelancerSettings from './pages/FreelancerSettings';
+import EmployerSettings from './pages/EmployerSettings';
+import ApplyForm from "./pages/ApplyForm";
+import PostJob from './pages/PostJob';
 import CreateProjects from './pages/Createprojects';
 import JobDetails from './pages/JobDetails';
 import './App.css';
@@ -26,6 +31,28 @@ function App() {
           <Route path="/explore" element={<><Navbar /><Explore /></>} />
           <Route path="/about" element={<><Navbar /><About /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
+
+          {/* ApplyForm URL Route */}          
+          <Route path="/apply/:jobId" element={<><Navbar /><ApplyForm /></>} />
+
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <><Navbar /><Login /></>
+              </PublicRoute>
+            }
+          />
+
+          <Route
+            path="/signup"
+            element={
+              <PublicRoute>
+                <><Navbar /><SignUp /></>
+              </PublicRoute>
+            }
+          />
+
           <Route path="/signup" element={<><Navbar /><SignUp /></>} />
           <Route path="/login" element={<><Navbar /><Login /></>} />
 
@@ -54,6 +81,24 @@ function App() {
           <Route
             path="/dashboard/employers"
             element={<><Navbar /><PrivateRoute><Employers /></PrivateRoute></>}
+          />
+
+          {/* freelancer settings page */}
+          <Route
+            path="/dashboard/freelancers/settings/*"
+            element={<><Navbar /><PrivateRoute><FreelancerSettings /></PrivateRoute></>}
+          />
+
+          {/* employer settings page */}
+          <Route
+            path="/dashboard/employers/settings/*"
+            element={<><Navbar /><PrivateRoute><EmployerSettings /></PrivateRoute></>}
+          />
+
+          {/* employer settings page */}
+          <Route
+            path="/dashboard/employers/post-job/*"
+            element={<><Navbar /><PrivateRoute><PostJob /></PrivateRoute></>}
           />
 
           {/* Redirect old paths to new dashboard URLs */}

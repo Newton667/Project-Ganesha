@@ -69,23 +69,35 @@ router.get('/', authMiddleware, async (req, res) => {
       }
     }
 
+    // Fetch contracts for assigned jobs so we have ContractIDs
+    let contractsByJobId = {};
+    const assignedJobIds = (jobs || []).filter(j => j.FreelancerID).map(j => j.JobID);
+    if (assignedJobIds.length > 0) {
+      const { data: contracts } = await supabase
+        .from('Contracts')
+        .select('ContractID, JobID, Progress, Status')
+        .in('JobID', assignedJobIds);
+      (contracts || []).forEach(c => { contractsByJobId[c.JobID] = c; });
+    }
+
     const activeProjects = (jobs || []).map(j => {
       const applicationCount = applicationCounts[j.JobID] || 0;
-      // Determine status based on whether a freelancer is assigned
-      const status = j.FreelancerID ? 'Assigned' : 'Open';
+      const contract = contractsByJobId[j.JobID];
+      const status = contract?.Status || (j.FreelancerID ? 'Assigned' : 'Open');
       return {
         id: j.JobID,
+        contractId: contract?.ContractID || null,
         title: j.JobTitle || 'Untitled Job',
         developer: j.FreelancerID ? 'Hired' : 'No hire yet',
         developerAvatar: j.FreelancerID ? '✓' : '📋',
         budget: j.BudgetMax || j.BudgetMin || 0,
-        spent: 0, // No spending until hired
-        progress: 0, // No progress until hired
+        spent: 0,
+        progress: contract?.Progress || 0,
         deadline: j.Duration || 'Not specified',
         status: status,
         lastUpdate: dayjs(j.JobCreated).fromNow(),
         milestones: { completed: 0, total: applicationCount },
-        skills: [] // Could join JobSkills table if needed
+        skills: []
       };
     });
 

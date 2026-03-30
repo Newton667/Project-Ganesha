@@ -55,7 +55,7 @@ function JobDetails() {
     if (id) fetchJob();
   }, [id]);
 
-  // Fetch account type
+  // Fetch account type and check if already applied
   useEffect(() => {
     const token = session?.access_token;
     if (!token) {
@@ -69,12 +69,20 @@ function JobDetails() {
       .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed to fetch account info')))
       .then((data) => {
         setAccountType(data.accountType);
+        // Only check application status for freelancers
+        if ((data.accountType === 'Freelancer' || data.accountType === 'Both') && id) {
+          return fetch(`${API_BASE}/api/jobs/${id}/hasApplied`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+            .then(res => res.ok ? res.json() : null)
+            .then(result => { if (result?.hasApplied) setSubmitSuccess(true); });
+        }
       })
       .catch((err) => {
         console.error('Account info error:', err);
       })
       .finally(() => setAccountLoading(false));
-  }, [session]);
+  }, [session, id]);
 
   const handleInterestChange = (e) => {
     const { name, value } = e.target;

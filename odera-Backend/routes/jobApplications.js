@@ -116,6 +116,30 @@ router.post('/:id/apply', authMiddleware, async (req, res) => {
 });
 
 /**
+ * GET /api/jobs/:id/hasApplied
+ * Check if the current user has already applied to a job
+ */
+router.get('/:id/hasApplied', authMiddleware, async (req, res) => {
+  const jobId = req.params.id;
+  const userId = req.user?.id;
+
+  try {
+    const { data, error } = await supabase
+      .from('JobApplications')
+      .select('ApplicationID')
+      .eq('JobID', jobId)
+      .eq('FreelancerID', userId)
+      .maybeSingle();
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.json({ hasApplied: !!data });
+  } catch (e) {
+    res.status(500).json({ error: 'Unhandled server error' });
+  }
+});
+
+/**
  * GET /api/jobs/:id/applications
  * Get all applications for a job (employer only)
  */
@@ -197,6 +221,122 @@ router.get('/:id/applications', authMiddleware, async (req, res) => {
 
   } catch (e) {
     console.error('[GET /jobs/:id/applications] unhandled:', e);
+    res.status(500).json({ error: 'Unhandled server error' });
+  }
+});
+
+/**
+ * DELETE /api/job-applications/employerreject/:applicationId
+ * Employer rejects (deletes) an application
+ */
+router.delete('/employerreject/:applicationId', authMiddleware, async (req, res) => {
+  const { applicationId } = req.params;
+  const userId = req.user?.id;
+
+  try {
+    // Get application to find its job
+    const { data: app, error: appErr } = await supabase
+      .from('JobApplications')
+      .select('ApplicationID, JobID')
+      .eq('ApplicationID', applicationId)
+      .maybeSingle();
+
+    if (appErr) return res.status(500).json({ error: appErr.message });
+    if (!app) return res.status(404).json({ error: 'Application not found' });
+
+    // Verify the employer owns the job
+    const { data: job, error: jobErr } = await supabase
+      .from('Jobs')
+      .select('EmployerID')
+      .eq('JobID', app.JobID)
+      .maybeSingle();
+
+    if (jobErr) return res.status(500).json({ error: jobErr.message });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.EmployerID !== userId) return res.status(403).json({ error: 'Not authorized' });
+
+    const { error: deleteErr } = await supabase
+      .from('JobApplications')
+      .delete()
+      .eq('ApplicationID', applicationId);
+
+    if (deleteErr) return res.status(500).json({ error: deleteErr.message });
+
+    res.json({ success: true, message: 'Application rejected' });
+  } catch (e) {
+    console.error('[DELETE /employerreject] unhandled:', e);
+    res.status(500).json({ error: 'Unhandled server error' });
+  }
+});
+
+/**
+ * PATCH /api/job-applications/employeraccept/:applicationId
+ * Employer accepts an application — assigns freelancer to job and creates a contract
+ */
+router.patch('/employeraccept/:applicationId', authMiddleware, async (req, res) => {
+  const { applicationId } = req.params;
+  const userId = req.user?.id;
+
+  try {
+    // Get application details
+    const { data: app, error: appErr } = await supabase
+      .from('JobApplications')
+      .select('ApplicationID, JobID, FreelancerID')
+      .eq('ApplicationID', applicationId)
+      .maybeSingle();
+
+    if (appErr) return res.status(500).json({ error: appErr.message });
+    if (!app) return res.status(404).json({ error: 'Application not found' });
+
+    // Verify employer owns the job
+    const { data: job, error: jobErr } = await supabase
+      .from('Jobs')
+      .select('EmployerID, BudgetMin, BudgetMax, FreelancerID')
+      .eq('JobID', app.JobID)
+      .maybeSingle();
+
+    if (jobErr) return res.status(500).json({ error: jobErr.message });
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.EmployerID !== userId) return res.status(403).json({ error: 'Not authorized' });
+    if (job.FreelancerID) return res.status(400).json({ error: 'Job already has a freelancer assigned' });
+
+    // Assign freelancer to the job
+    const { error: jobUpdateErr } = await supabase
+      .from('Jobs')
+      .update({ FreelancerID: app.FreelancerID })
+      .eq('JobID', app.JobID);
+
+    if (jobUpdateErr) return res.status(500).json({ error: jobUpdateErr.message });
+
+    // Mark application as accepted
+    const { error: appUpdateErr } = await supabase
+      .from('JobApplications')
+      .update({ Status: 'Accepted' })
+      .eq('ApplicationID', applicationId);
+
+    if (appUpdateErr) return res.status(500).json({ error: appUpdateErr.message });
+
+    // Create a contract
+    const { error: contractErr } = await supabase
+      .from('Contracts')
+      .insert({
+        JobID: app.JobID,
+        FreelancerID: app.FreelancerID,
+        EmployerID: userId,
+        ApplicationID: applicationId,
+        Status: 'In Progress',
+        Terms: 'Standard contract terms',
+        PricingMin: job.BudgetMin || 0,
+        PricingMax: job.BudgetMax || 0,
+        Progress: 0,
+        LastUpdate: new Date().toISOString(),
+      });
+
+    if (contractErr) console.error('[accept] contract creation error:', contractErr);
+
+    res.json({ success: true, message: 'Application accepted and contract created' });
+  } catch (e) {
+    console.error('[PATCH /employeraccept] unhandled:', e);
     res.status(500).json({ error: 'Unhandled server error' });
   }
 });

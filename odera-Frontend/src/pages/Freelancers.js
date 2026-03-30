@@ -24,7 +24,6 @@ function Freelancers() {
   const [activeProjects, setActiveProjects] = useState([]);
   const [messages, setMessages] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
-  const [earningsData, setEarningsData] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accountType, setAccountType] = useState(null);
@@ -87,7 +86,6 @@ function Freelancers() {
         setActiveProjects(data.activeProjects ?? []);
         setMessages(data.messages ?? []);
         setOpportunities(data.opportunities ?? []);
-        setEarningsData(data.earningsData ?? []);
       } catch (err) {
         if (cancelled) return;
         console.error('[Freelancers] fetch error:', err);
@@ -97,7 +95,6 @@ function Freelancers() {
         setActiveProjects([]);
         setMessages([]);
         setOpportunities([]);
-        setEarningsData([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -222,7 +219,7 @@ function Freelancers() {
                 </div>
               </div>
               <div className="project-actions">
-                <button className="btn-secondary">View Details</button>
+                <button className="btn-secondary" onClick={() => navigate(`/project/${project.id}`)}>View Details</button>
                 <button className="btn-primary">Update Progress</button>
               </div>
             </div>
@@ -303,7 +300,7 @@ function Freelancers() {
             </div>
             <div className="project-actions">
               <button className="btn-secondary">Message Client</button>
-              <button className="btn-primary">Open Project</button>
+              <button className="btn-primary" onClick={() => navigate(`/project/${project.id}`)}>Open Project</button>
             </div>
           </div>
         ))}

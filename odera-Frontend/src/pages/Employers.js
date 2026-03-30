@@ -15,7 +15,7 @@ const SAFE_DEFAULTS = {
 
 function Employers() {
   const [activeSection, setActiveSection] = useState('overview');
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null); // { type: 'accept'|'reject', applicationId }
   
   const { session, signOut } = UserAuth();
   const navigate = useNavigate();
@@ -25,7 +25,6 @@ function Employers() {
   const [messages, setMessages] = useState([]);
   const [recentApplications, setRecentApplications] = useState([]);
   const [availableDevelopers, setAvailableDevelopers] = useState([]);
-  const [earningsData, setEarningsData] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +66,6 @@ function Employers() {
         setMessages(data.messages ?? []);
         setRecentApplications(data.recentApplications ?? []);
         setAvailableDevelopers(data.availableDevelopers ?? []);
-        setEarningsData(data.earningsData ?? []);
       } catch (err) {
         if (cancelled) return;
         console.error('[Employers] fetch error:', err);
@@ -78,7 +76,6 @@ function Employers() {
         setMessages([]);
         setRecentApplications([]);
         setAvailableDevelopers([]);
-        setEarningsData([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -128,35 +125,47 @@ function Employers() {
     }
   };
 
-  const handleRejectApplication = async (applicationId) => {
-    if (!session?.access_token) {
-      console.error("No session token found.");
-      return;
-    }
-  
+  const handleRejectApplication = (applicationId) => {
+    setConfirmAction({ type: 'reject', applicationId });
+  };
+
+  const handleAcceptApplication = (applicationId) => {
+    setConfirmAction({ type: 'accept', applicationId });
+  };
+
+  const handleConfirm = async () => {
+    const { type, applicationId } = confirmAction;
+    setConfirmAction(null);
+
     try {
-      const res = await fetch(`/api/job-applications/employerreject/${applicationId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-  
-      const result = await res.json();
-  
-      if (!res.ok) {
-        throw new Error(result.error || "Failed to reject application");
+      if (type === 'reject') {
+        const res = await fetch(`/api/job-applications/employerreject/${applicationId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Failed to reject application');
+        setRecentApplications(prev => prev.filter(app => app.id !== applicationId));
+      } else {
+        const res = await fetch(`/api/job-applications/employeraccept/${applicationId}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Failed to accept application');
+        setRecentApplications(prev => prev.filter(app => app.id !== applicationId));
       }
-  
-      // Remove the rejected application from local state
-      setRecentApplications(prev =>
-        prev.filter(app => app.id !== applicationId)
-      );
-  
-      console.log("Application rejected:", result.message);
     } catch (err) {
-      console.error("Error rejecting application:", err.message);
+      console.error('Error processing application:', err.message);
       alert(`Error: ${err.message}`);
+    }
+  };
+
+  const handleViewProject = (project) => {
+    if (project.contractId) {
+      navigate(`/project/${project.contractId}`);
+    } else {
+      alert('No contract exists for this job yet. A contract is created when you accept an application.');
     }
   };
 
@@ -248,7 +257,7 @@ function Employers() {
                   </div>
                 </div>
                 <div className="project-overview-actions">
-                  <button className="btn-secondary">View Details</button>
+                  <button className="btn-secondary" onClick={() => handleViewProject(project)}>View Details</button>
                   <button className="btn-link">Message Developer</button>
                 </div>
               </div>
@@ -349,8 +358,8 @@ function Employers() {
               ))}
             </div>
             <div className="project-actions">
-              <button className="btn-secondary">View Details</button>
-              <button className="btn-primary">Review Progress</button>
+              <button className="btn-secondary" onClick={() => handleViewProject(project)}>View Details</button>
+              <button className="btn-primary" onClick={() => handleViewProject(project)}>Review Progress</button>
             </div>
           </div>
           ))
@@ -430,7 +439,12 @@ function Employers() {
               Reject Application
               </button>
 
-              <button className="btn-primary">Accept Application</button>
+              <button
+                className="btn-primary"
+                onClick={() => handleAcceptApplication(application.id)}
+              >
+                Accept Application
+              </button>
             </div>
           </div>
         ))}
@@ -601,8 +615,6 @@ function Employers() {
   }
 
   const unreadMessages = messages.filter(msg => msg.unread).length;
-  // Calculate unread count for the sidebar/tab badge
-  const unreadCount = messages.filter(m => m.unread).length;
   const pendingApplications = recentApplications.length;
 
   return (
@@ -680,6 +692,32 @@ function Employers() {
       <div className="dashboard-content">
         {renderContent()}
       </div>
+
+      {/* Confirm Modal */}
+      {confirmAction && (
+        <div className="confirm-modal-overlay" onClick={() => setConfirmAction(null)}>
+          <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className={`confirm-modal-icon ${confirmAction.type}`}>
+              {confirmAction.type === 'accept' ? '✓' : '✕'}
+            </div>
+            <h2>{confirmAction.type === 'accept' ? 'Accept Application' : 'Reject Application'}</h2>
+            <p>
+              {confirmAction.type === 'accept'
+                ? 'A contract will be created and the job will be assigned to this freelancer.'
+                : 'Are you sure you want to reject this application? This cannot be undone.'}
+            </p>
+            <div className="confirm-modal-actions">
+              <button className="btn-secondary" onClick={() => setConfirmAction(null)}>Cancel</button>
+              <button
+                className={confirmAction.type === 'accept' ? 'btn-primary' : 'btn-reject'}
+                onClick={handleConfirm}
+              >
+                {confirmAction.type === 'accept' ? 'Accept' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

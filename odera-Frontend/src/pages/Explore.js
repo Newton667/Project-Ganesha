@@ -5,6 +5,18 @@ import './Explore.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE || '';
 
+const tabs = [
+  { id: 'all', label: 'All Jobs', cat: null },
+  { id: 'web', label: 'Web Development', cat: 'Web Development' },
+  { id: 'mobile', label: 'Mobile Apps', cat: 'Mobile' },
+  { id: 'data', label: 'Data Science', cat: 'Data Science' },
+  { id: 'ai', label: 'AI & ML', cat: 'AI & ML' },
+  { id: 'game', label: 'Game Dev', cat: 'Game Dev' },
+  { id: 'blockchain', label: 'Blockchain', cat: 'Blockchain' },
+  { id: 'desktop', label: 'Desktop Apps', cat: 'Desktop Apps' },
+  { id: 'devops', label: 'DevOps', cat: 'DevOps' },
+];
+
 function Explore() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,18 +29,6 @@ function Explore() {
   const [selectedJob, setSelectedJob] = useState(null);
   const navigate = useNavigate();
   const { session } = UserAuth();
-
-  const tabs = [
-    { id: 'all', label: 'All Jobs', cat: null },
-    { id: 'web', label: 'Web Development', cat: 'Web Development' },
-    { id: 'mobile', label: 'Mobile Apps', cat: 'Mobile' },
-    { id: 'data', label: 'Data Science', cat: 'Data Science' },
-    { id: 'ai', label: 'AI & ML', cat: 'AI & ML' },
-    { id: 'game', label: 'Game Dev', cat: 'Game Dev' },
-    { id: 'blockchain', label: 'Blockchain', cat: 'Blockchain' },
-    { id: 'desktop', label: 'Desktop Apps', cat: 'Desktop Apps' },
-    { id: 'devops', label: 'DevOps', cat: 'DevOps' },
-  ];
 
   // Fetch account type
   useEffect(() => {

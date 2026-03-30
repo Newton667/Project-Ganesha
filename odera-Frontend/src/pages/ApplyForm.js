@@ -8,7 +8,7 @@ const API_BASE = process.env.REACT_APP_API_BASE || "";
 function ApplyForm() {
   const { jobId } = useParams();
   const navigate = useNavigate();
-  const { session, signOut } = UserAuth();
+  const { session } = UserAuth();
 
   const [proposalText, setProposalText] = useState("");
   const [coverLetter, setCoverLetter] = useState("");

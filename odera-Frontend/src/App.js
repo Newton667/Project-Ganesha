@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -19,6 +18,7 @@ import ApplyForm from "./pages/ApplyForm";
 import PostJob from './pages/PostJob';
 import CreateProjects from './pages/Createprojects';
 import JobDetails from './pages/JobDetails';
+import ProjectView from './pages/ProjectView';
 import './App.css';
 
 function App() {
@@ -104,6 +104,9 @@ function App() {
           {/* Redirect old paths to new dashboard URLs */}
           <Route path="/freelancers" element={<Navigate to="/dashboard/freelancers" replace />} />
           <Route path="/employers" element={<Navigate to="/dashboard/employers" replace />} />
+
+          {/* Project view page */}
+          <Route path="/project/:contractId" element={<><Navbar /><PrivateRoute><ProjectView /></PrivateRoute></>} />
 
           {/* Optional 404 redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />

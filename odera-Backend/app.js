@@ -14,6 +14,7 @@ var freelancerSettingsRouter = require('./routes/freelancerSettings');
 var jobApplicationsRouter = require('./routes/jobApplications');
 var jobsRouter = require('./routes/jobs');
 var accountInfoRouter = require('./routes/accountInfo');
+var projectRouter = require('./routes/project');
 
 var app = express();
 
@@ -36,5 +37,6 @@ app.use('/api/job-applications', jobApplicationsRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/jobs', jobApplicationsRouter); // handles /api/jobs/:id/apply
 app.use('/api/account-info', accountInfoRouter);
+app.use('/api/project', projectRouter);
 
 module.exports = app;

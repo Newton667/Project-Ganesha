@@ -19,6 +19,7 @@ import PostJob from './pages/PostJob';
 import CreateProjects from './pages/Createprojects';
 import JobDetails from './pages/JobDetails';
 import ProjectView from './pages/ProjectView';
+import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
 function App() {
@@ -107,6 +108,9 @@ function App() {
 
           {/* Project view page */}
           <Route path="/project/:contractId" element={<><Navbar /><PrivateRoute><ProjectView /></PrivateRoute></>} />
+
+          {/* Admin Dashboard */}
+          <Route path="/admin" element={<><Navbar /><PrivateRoute><AdminDashboard /></PrivateRoute></>} />
 
           {/* Optional 404 redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />

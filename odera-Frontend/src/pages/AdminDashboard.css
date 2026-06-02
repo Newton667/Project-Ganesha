@@ -1,0 +1,124 @@
+.admin-dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    font-family: inherit;
+    color: #e5e5e5;
+}
+
+.admin-header {
+    margin-bottom: 2.5rem;
+}
+
+.admin-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+}
+
+.admin-header p {
+    color: #a3a3a3;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.admin-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.admin-metric-card {
+    background: #171717;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333333;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-metric-card h3 {
+    font-size: 0.9rem;
+    color: #a3a3a3;
+    margin: 0 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+}
+
+.admin-metric-sub {
+    font-size: 0.85rem;
+    color: #737373;
+    margin-top: auto;
+}
+
+.admin-users-section h2 {
+    font-size: 1.8rem;
+    color: #ffffff;
+    margin-bottom: 1.5rem;
+}
+
+.admin-table-responsive {
+    overflow-x: auto;
+    background: #171717;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333333;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    color: #e5e5e5;
+}
+
+.admin-table th, .admin-table td {
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid #333333;
+}
+
+.admin-table th {
+    background-color: #0a0a0a;
+    color: #a3a3a3;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.admin-table tr:hover {
+    background-color: #262626;
+}
+
+.admin-btn-delete {
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.admin-btn-delete:hover {
+    background-color: #b91c1c;
+}
+
+.admin-loading, .admin-error {
+    padding: 4rem;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #e5e5e5;
+}
+
+.admin-error {
+    color: #ef4444;
+}

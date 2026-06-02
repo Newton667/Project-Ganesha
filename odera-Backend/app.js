@@ -2,6 +2,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors');
 
 // Routers
 var indexRouter = require('./routes/index');
@@ -19,6 +20,7 @@ var projectRouter = require('./routes/project');
 var app = express();
 
 // Middleware
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -38,5 +40,6 @@ app.use('/api/jobs', jobsRouter);
 app.use('/api/jobs', jobApplicationsRouter); // handles /api/jobs/:id/apply
 app.use('/api/account-info', accountInfoRouter);
 app.use('/api/project', projectRouter);
+app.use('/api/admin', require('./routes/admin'));
 
 module.exports = app;

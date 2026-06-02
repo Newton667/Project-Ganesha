@@ -112,6 +112,37 @@
     background-color: #b91c1c;
 }
 
+.admin-btn-edit {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    margin-right: 0.5rem;
+}
+
+.admin-btn-edit:hover {
+    background-color: #1d4ed8;
+}
+
+.admin-btn-warn {
+    background-color: #d97706;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.admin-btn-warn:hover {
+    background-color: #b45309;
+}
+
 .admin-loading, .admin-error {
     padding: 4rem;
     text-align: center;

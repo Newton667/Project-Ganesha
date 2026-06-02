@@ -66,8 +66,43 @@ router.delete('/users/:id', async (req, res) => {
 });
 
 // ==============================
-// JOBS CRUD Example (Standard Table)
+// DASHBOARD DATA LISTS
 // ==============================
+router.get('/jobs', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('Jobs').select('*').order('JobCreated', { ascending: false }).limit(50);
+        if (error) throw error; 
+        res.json(data);
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+router.get('/contracts', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('Contracts').select('*').limit(50);
+        if (error) throw error; 
+        res.json(data);
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+router.get('/messages', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('Messages').select('*').order('timestamp', { ascending: false }).limit(50);
+        if (error) throw error; 
+        res.json(data);
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// ==============================
+// JOBS, CONTRACTS, MESSAGES ACTION ROUTES
+// ==============================
+router.put('/jobs/:id', async (req, res) => {
+    try {
+        const { error } = await supabase.from('Jobs').update({ JobTitle: req.body.JobTitle }).eq('JobID', req.params.id);
+        if (error) throw error; 
+        res.json({ success: true });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
 router.delete('/jobs/:id', async (req, res) => {
     try {
         const { error } = await supabase.from('Jobs').delete().eq('JobID', req.params.id);
@@ -76,6 +111,27 @@ router.delete('/jobs/:id', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+});
+
+router.put('/contracts/:id/revoke', async (req, res) => {
+    try {
+        const { error } = await supabase.from('Contracts').update({ Status: 'Revoked' }).eq('ContractID', req.params.id);
+        if (error) throw error; res.json({ success: true });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+router.put('/messages/:id', async (req, res) => {
+    try {
+        const { error } = await supabase.from('Messages').update({ content: req.body.content }).eq('messageid', req.params.id);
+        if (error) throw error; res.json({ success: true });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+router.delete('/messages/:id', async (req, res) => {
+    try {
+        const { error } = await supabase.from('Messages').delete().eq('messageid', req.params.id);
+        if (error) throw error; res.json({ success: true });
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 module.exports = router;

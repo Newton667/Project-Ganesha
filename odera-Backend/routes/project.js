@@ -151,7 +151,7 @@ router.get('/:contractId/messages', authMiddleware, async (req, res) => {
     const { data: messages, error: msgErr } = await supabase
       .from('Messages')
       .select('messageid, senderid, receiverid, content, timestamp, isunread')
-      .eq('projectid', contractId)
+      .eq('projectid', contract.JobID)
       .order('timestamp', { ascending: true });
 
     if (msgErr) {
@@ -220,7 +220,7 @@ router.post('/:contractId/messages', authMiddleware, async (req, res) => {
       .insert({
         senderid: userId,
         receiverid: receiverId,
-        projectid: contractId,
+        projectid: contract.JobID,
         content: String(content).trim(),
         type: 'message',
         isunread: true,

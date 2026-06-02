@@ -139,28 +139,38 @@ router.get('/', authMiddleware, async (req, res) => {
       .from('Messages')
       .select(`
         messageid, 
+        senderid,
         content, 
         timestamp, 
         isunread, 
         type,
-        project:Jobs(JobTitle),
-        sender_employer:Employers!Messages_senderid_fkey1(FirstName, LastName),
-        sender_freelancer:Freelancers!Messages_senderid_fkey2(FirstName, LastName)
+        project:Jobs(JobTitle)
       `)
       .eq('receiverid', userId)
       .order('timestamp', { ascending: false });
 
     if (msgErr) throw msgErr;
 
+    // Fetch sender details manually since we dropped the direct FKs
+    const senderIds = [...new Set((messagesData || []).map(m => m.senderid))];
+    let sendersMap = {};
+
+    if (senderIds.length > 0) {
+      const { data: freelancers } = await supabase.from('Freelancers').select('FreelancerID, FirstName, LastName').in('FreelancerID', senderIds);
+      const { data: employers } = await supabase.from('Employers').select('EmployerID, FirstName, LastName').in('EmployerID', senderIds);
+
+      (freelancers || []).forEach(f => { sendersMap[f.FreelancerID] = f; });
+      (employers || []).forEach(e => { sendersMap[e.EmployerID] = e; });
+    }
+
     const messages = (messagesData || []).map(m => {
-      // Use whichever join returned data (one will be null)
-      const sender = m.sender_freelancer || m.sender_employer;
+      const sender = sendersMap[m.senderid] || {};
       const firstName = sender?.FirstName || 'Unknown';
       const lastName = sender?.LastName || 'User';
 
       return {
         id: m.messageid,
-        from: `${firstName} ${lastName}`,
+        from: `${firstName} ${lastName}`.trim(),
         fromAvatar: firstName[0] + (lastName[0] || ''),
         project: m.project?.JobTitle || 'General Inquiry',
         message: m.content,

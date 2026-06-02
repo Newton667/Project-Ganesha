@@ -75,11 +75,18 @@ function Freelancers() {
 
         // Read as text first so we can show helpful errors if not JSON
         const text = await res.text();
+        let data = {};
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            // Not JSON
+          }
+        }
         if (!res.ok) {
-          throw new Error(`API ${res.status} ${res.statusText} — ${text || '(no body)'}`);
+          throw new Error(data.error || `API ${res.status} ${res.statusText} — ${text || '(no body)'}`);
         }
 
-        const data = text ? JSON.parse(text) : {};
         if (cancelled) return;
 
         setUserData(data.userData ?? SAFE_DEFAULTS);
@@ -413,7 +420,7 @@ function Freelancers() {
 
   if (error) {
     return (
-      <div className="employer-dashboard">
+      <div className="freelancer-dashboard">
         <div style={{ color: 'red', padding: '2rem', textAlign: 'center' }}>
           <h3>Error loading dashboard</h3>
           <p>{error}</p>

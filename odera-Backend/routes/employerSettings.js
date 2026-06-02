@@ -43,33 +43,33 @@ router.put("/", authMiddleware, async (req, res) => {
     const employerId = req.user.id;
 
     const {
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      address,
-      companyName,
-      userBio,
-      organization,
-      profilePic,
-      mailingList,
+      FirstName,
+      LastName,
+      Email,
+      PhoneNumber,
+      Address,
+      CompanyName,
+      UserBio,
+      Organization,
+      ProfilePic,
+      MailingList,
     } = req.body;
 
     // Split into Employers + EmployerProfiles
     const employerUpdate = {
-      FirstName: firstName,
-      LastName: lastName,
-      Email: email,
-      PhoneNumber: phoneNumber,
-      Address: address,
-      CompanyName: companyName,
+      FirstName,
+      LastName,
+      Email,
+      PhoneNumber,
+      Address,
+      CompanyName,
     };
 
     const profileUpdate = {
-      UserBio: userBio,
-      Organization: organization,
-      ProfilePic: profilePic,
-      MailingList: mailingList,
+      UserBio,
+      Organization,
+      ProfilePic,
+      MailingList,
     };
 
     // Update Employers

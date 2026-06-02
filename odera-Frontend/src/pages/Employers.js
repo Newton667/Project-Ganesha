@@ -51,11 +51,18 @@ function Employers() {
 
         // Read as text first so we can show helpful errors if not JSON
         const text = await res.text();
+        let data = {};
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            // Not JSON
+          }
+        }
         if (!res.ok) {
-          throw new Error(`API ${res.status} ${res.statusText} — ${text || '(no body)'}`);
+          throw new Error(data.error || `API ${res.status} ${res.statusText} — ${text || '(no body)'}`);
         }
 
-        const data = text ? JSON.parse(text) : {};
         if (cancelled) return;
 
         console.log('📊 Employer Dashboard Data:', data);
@@ -173,9 +180,6 @@ function Employers() {
   const handlePostProject = () => {
     navigate('/create-projects');
   };
-
-  if (error) return <div>Error: {error}</div>;
-  if (!userData) return <div>Loading dashboard...</div>;
 
   const renderOverview = () => (
     <div className="overview-content">

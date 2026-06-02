@@ -17,9 +17,13 @@ router.get('/', authMiddleware, async (req, res) => {
       .from('Employers')
       .select('EmployerID, CompanyName, EmployerProfiles(*)')
       .eq('EmployerID', userId)
-      .single();
+      .maybeSingle();
 
     if (empErr) throw empErr;
+
+    if (!employerData) {
+      return res.status(403).json({ error: 'Access denied: You do not have an employer account.' });
+    }
 
     const profile = employerData.EmployerProfiles?.[0] || {};
 

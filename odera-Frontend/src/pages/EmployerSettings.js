@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { UserAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import "./Employers.css";
 import "./EmployerSettings.css";
 
 const EmployerSettings = () => {
     const { session } = UserAuth();
+    const navigate = useNavigate();
     const [settings, setSettings] = useState({
         firstName: "",
         lastName: "",
@@ -116,92 +119,104 @@ const EmployerSettings = () => {
         }
     };
 
-    if (loading) return <p className="loading">Loading settings...</p>;
+    if (loading) {
+        return (
+            <div className="employer-dashboard">
+                <div className="loading-container">Loading settings...</div>
+            </div>
+        );
+    }
 
     return (
-        <div className="employer-settings">
-            <h2>Employer Settings</h2>
+        <div className="employer-dashboard">
+            <div className="navbar-area"></div>
+            
+            <div className="dashboard-header">
+                <div className="company-info">
+                    <div className="company-details">
+                        <h1>Employer Settings</h1>
+                        <p>Update your company profile and preferences</p>
+                    </div>
+                </div>
+                <div className="header-actions">
+                    <button className="profile-btn" onClick={() => navigate("/dashboard/employers")}>
+                        Back to Dashboard
+                    </button>
+                </div>
+            </div>
+            
+            <div className="dashboard-content">
+                <div className="settings-container">
+                    {error && <div className="alert error">{error}</div>}
+                    {success && <div className="alert success">{success}</div>}
 
-            {error && <p className="error">{error}</p>}
-            {success && <p className="success">{success}</p>}
+                    <div className="settings-section">
+                        <h3>Personal Information</h3>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label>First Name</label>
+                                <input type="text" name="firstName" value={settings.firstName} onChange={handleChange} />
+                            </div>
+                            <div className="form-group">
+                                <label>Last Name</label>
+                                <input type="text" name="lastName" value={settings.lastName} onChange={handleChange} />
+                            </div>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" value={settings.email} onChange={handleChange} disabled />
+                            </div>
+                            <div className="form-group">
+                                <label>Phone Number</label>
+                                <input type="text" name="phoneNumber" value={settings.phoneNumber} onChange={handleChange} />
+                            </div>
+                        </div>
+                    </div>
 
-            <form>
-                <input
-                    type="text"
-                    name="firstName"
-                    value={settings.firstName || ""}
-                    onChange={handleChange}
-                    placeholder="First Name"
-                />
-                <input
-                    type="text"
-                    name="lastName"
-                    value={settings.lastName || ""}
-                    onChange={handleChange}
-                    placeholder="Last Name"
-                />
-                <input
-                    type="email"
-                    name="email"
-                    value={settings.email || ""}
-                    onChange={handleChange}
-                    placeholder="Email"
-                />
-                <input
-                    type="text"
-                    name="phoneNumber"
-                    value={settings.phoneNumber || ""}
-                    onChange={handleChange}
-                    placeholder="Phone Number"
-                />
-                <input
-                    type="text"
-                    name="address"
-                    value={settings.address || ""}
-                    onChange={handleChange}
-                    placeholder="Address"
-                />
-                <input
-                    type="text"
-                    name="companyName"
-                    value={settings.companyName || ""}
-                    onChange={handleChange}
-                    placeholder="Company Name"
-                />
-                <textarea
-                    name="userBio"
-                    value={settings.userBio || ""}
-                    onChange={handleChange}
-                    placeholder="User Bio"
-                />
-                <input
-                    type="text"
-                    name="organization"
-                    value={settings.organization || ""}
-                    onChange={handleChange}
-                    placeholder="Organization"
-                />
-                <input
-                    type="text"
-                    name="profilePic"
-                    value={settings.profilePic || ""}
-                    onChange={handleChange}
-                    placeholder="Profile Pic URL"
-                />
-                <label>
-                    <input
-                        type="checkbox"
-                        name="mailingList"
-                        checked={!!settings.mailingList}
-                        onChange={handleChange}
-                    />
-                    Subscribe to Mailing List
-                </label>
-            </form>
+                    <div className="settings-section">
+                        <h3>Company Details</h3>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label>Company Name</label>
+                                <input type="text" name="companyName" value={settings.companyName} onChange={handleChange} />
+                            </div>
+                            <div className="form-group">
+                                <label>Organization</label>
+                                <input type="text" name="organization" value={settings.organization} onChange={handleChange} />
+                            </div>
+                            <div className="form-group full-width">
+                                <label>Address</label>
+                                <input type="text" name="address" value={settings.address} onChange={handleChange} />
+                            </div>
+                            <div className="form-group full-width">
+                                <label>Company Bio</label>
+                                <textarea name="userBio" value={settings.userBio} onChange={handleChange}></textarea>
+                            </div>
+                        </div>
+                    </div>
 
-            <button onClick={handleSave} disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
-            </button>
+                    <div className="settings-section">
+                        <h3>Profile & Preferences</h3>
+                        <div className="form-grid">
+                            <div className="form-group full-width">
+                                <label>Profile Picture URL</label>
+                                <input type="text" name="profilePic" value={settings.profilePic} onChange={handleChange} />
+                            </div>
+                            <div className="form-group checkbox-group full-width">
+                                <label className="checkbox-label">
+                                    <input type="checkbox" name="mailingList" checked={settings.mailingList} onChange={handleChange} />
+                                    <span className="checkbox-text">Subscribe to Mailing List</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="settings-actions">
+                        <button className="btn-primary" onClick={handleSave} disabled={saving}>
+                            {saving ? "Saving..." : "Save Changes"}
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

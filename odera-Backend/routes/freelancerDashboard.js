@@ -23,6 +23,10 @@ router.get('/', authMiddleware, async (req, res) => {
 
     if (freelancerError) console.error('Freelancers err:', freelancerError);
 
+    if (!freelancerData) {
+      return res.status(403).json({ error: 'Access denied: You do not have a freelancer account.' });
+    }
+
     // 1) Profile (tolerate missing)
     const { data: profileData, error: profileError } = await supabase
       .from('FreelancerProfile')

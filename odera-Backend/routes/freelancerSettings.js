@@ -66,11 +66,6 @@ router.put("/", authMiddleware, async (req, res) => {
       Email,
       PhoneNumber,
       Address,
-      HourlyRate,
-      Specialty,
-      School,
-      Year,
-      Availability,
     };
 
     const profileUpdate = {
@@ -78,6 +73,11 @@ router.put("/", authMiddleware, async (req, res) => {
       Organization,
       ProfilePic,
       MailingList,
+      HourlyRate,
+      Specialty,
+      School,
+      Year,
+      Availability,
     };
 
     // Update Freelancers
@@ -88,9 +88,9 @@ router.put("/", authMiddleware, async (req, res) => {
 
     if (freelancerError) throw freelancerError;
 
-    // Update FreelancerProfiles
+    // Update FreelancerProfile
     const { error: profileError } = await supabase
-      .from("FreelancerProfiles")
+      .from("FreelancerProfile")
       .update(profileUpdate)
       .eq("FreelancerID", freelancerId);
 

@@ -13,13 +13,7 @@ router.use(verifyAdmin);
 // ==============================
 router.get('/metrics', async (req, res) => {
     try {
-        const [
-            { count: employersCount },
-            { count: freelancersCount },
-            { count: jobsCount },
-            { count: contractsCount },
-            { count: messagesCount }
-        ] = await Promise.all([
+        const results = await Promise.all([
             supabase.from('Employers').select('*', { count: 'exact', head: true }),
             supabase.from('Freelancers').select('*', { count: 'exact', head: true }),
             supabase.from('Jobs').select('*', { count: 'exact', head: true }),
@@ -27,13 +21,19 @@ router.get('/metrics', async (req, res) => {
             supabase.from('Messages').select('*', { count: 'exact', head: true })
         ]);
 
+        // Explicitly check for DB errors, otherwise destructuring fails silently
+        const dbError = results.find(r => r.error)?.error;
+        if (dbError) throw dbError;
+        
+        const [employers, freelancers, jobs, contracts, messages] = results;
+
         res.json({
-            totalUsers: (employersCount || 0) + (freelancersCount || 0),
-            employersCount,
-            freelancersCount,
-            jobsCount,
-            contractsCount,
-            messagesCount
+            totalUsers: (employers.count || 0) + (freelancers.count || 0),
+            employersCount: employers.count,
+            freelancersCount: freelancers.count,
+            jobsCount: jobs.count,
+            contractsCount: contracts.count,
+            messagesCount: messages.count
         });
     } catch (error) {
         res.status(500).json({ error: error.message });

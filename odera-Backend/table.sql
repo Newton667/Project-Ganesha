@@ -194,3 +194,10 @@ CREATE TABLE public.Messages (
   CONSTRAINT Messages_receiverid_fkey FOREIGN KEY (receiverid) REFERENCES auth.users(id),
   CONSTRAINT Messages_projectid_fkey FOREIGN KEY (projectid) REFERENCES public.Jobs(JobID)
 );
+CREATE TABLE public.admins (
+  email character varying NOT NULL,
+  adminid uuid NOT NULL DEFAULT gen_random_uuid(),
+  accountcreated timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT admins_pkey PRIMARY KEY (adminid),
+  CONSTRAINT admins_adminid_fkey FOREIGN KEY (adminid) REFERENCES auth.users(id)
+);

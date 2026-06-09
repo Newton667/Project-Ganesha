@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient'; // Ensure this points to your frontend Supabase init
 import './AdminDashboard.css';
 
+// Fallback to localhost if the environment variable isn't set
+const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:3000';
+
 export default function AdminDashboard() {
     const [metrics, setMetrics] = useState(null);
     const [users, setUsers] = useState([]);
@@ -27,11 +30,11 @@ export default function AdminDashboard() {
 
                 // Request all necessary dashboard data simultaneously
                 const [metricsRes, usersRes, jobsRes, contractsRes, messagesRes] = await Promise.all([
-                    fetch('http://localhost:3000/api/admin/metrics', { headers }),
-                    fetch('http://localhost:3000/api/admin/users', { headers }),
-                    fetch('http://localhost:3000/api/admin/jobs', { headers }),
-                    fetch('http://localhost:3000/api/admin/contracts', { headers }),
-                    fetch('http://localhost:3000/api/admin/messages', { headers })
+                    fetch(`${API_BASE_URL}/api/admin/metrics`, { headers }),
+                    fetch(`${API_BASE_URL}/api/admin/users`, { headers }),
+                    fetch(`${API_BASE_URL}/api/admin/jobs`, { headers }),
+                    fetch(`${API_BASE_URL}/api/admin/contracts`, { headers }),
+                    fetch(`${API_BASE_URL}/api/admin/messages`, { headers })
                 ]);
 
                 if (!metricsRes.ok || !usersRes.ok || !jobsRes.ok || !contractsRes.ok || !messagesRes.ok) {
@@ -65,7 +68,7 @@ export default function AdminDashboard() {
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3000/api/admin/users/${userId}`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
@@ -88,7 +91,7 @@ export default function AdminDashboard() {
         if (!newTitle || newTitle === job.JobTitle) return;
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3000/api/admin/jobs/${job.JobID}`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/jobs/${job.JobID}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ JobTitle: newTitle })
@@ -102,7 +105,7 @@ export default function AdminDashboard() {
         if (!window.confirm('Are you sure you want to delete this job? If this job has active contracts, the deletion might fail.')) return;
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3000/api/admin/jobs/${jobId}`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/jobs/${jobId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
@@ -118,7 +121,7 @@ export default function AdminDashboard() {
         if (!window.confirm('Are you sure you want to revoke this contract?')) return;
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3000/api/admin/contracts/${contractId}/revoke`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/contracts/${contractId}/revoke`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
@@ -135,7 +138,7 @@ export default function AdminDashboard() {
         if (!newContent || newContent === message.content) return;
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3000/api/admin/messages/${message.messageid}`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/messages/${message.messageid}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: newContent })
@@ -149,7 +152,7 @@ export default function AdminDashboard() {
         if (!window.confirm('Are you sure you want to delete this message?')) return;
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const res = await fetch(`http://localhost:3000/api/admin/messages/${messageId}`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/messages/${messageId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });

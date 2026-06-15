@@ -112,10 +112,12 @@ router.get('/', authMiddleware, async (req, res) => {
       const { data: appsData, error: appsErr } = await supabase
         .from('JobApplications')
         .select(`
-          ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter,
+          ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter, Status,
           Jobs(JobTitle),
-          Freelancers(FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty)),
-          FreelancerSkills(Skill)
+          Freelancers(
+            FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty),
+            FreelancerSkills(Skill)
+          )
         `)
         .in('JobID', jobs.map(j => j.JobID));
 
@@ -133,8 +135,9 @@ router.get('/', authMiddleware, async (req, res) => {
     proposedBudget: a.Rating || 0,
     timeline: a.Timeline || '',
     coverLetter: a.CoverLetter || '',
-    portfolio: (a.FreelancerSkills || []).map(s => s.Skill),
-    appliedTime: 'N/A' // Would require an application timestamp column
+    portfolio: (a.Freelancers?.FreelancerSkills || a.FreelancerSkills || []).map(s => s.Skill),
+    appliedTime: 'N/A', // Would require an application timestamp column
+    status: a.Status || 'Pending Review'
   }));
 
 
@@ -190,8 +193,7 @@ router.get('/', authMiddleware, async (req, res) => {
       .from('FreelancerProfile')
       .select(`
         FreelancerID, Organization, Availability, Rating, CompletedProjects, HourlyRate, Specialty, LastActive, ResponseTime, SuccessRate, Year, School,
-        Freelancers(FirstName, LastName),
-        FreelancerSkills(Skill)
+        Freelancers(FirstName, LastName, FreelancerSkills(Skill))
       `)
       .neq('Availability', 'Unavailable');
 
@@ -206,7 +208,7 @@ router.get('/', authMiddleware, async (req, res) => {
       rating: d.Rating || 0,
       completedProjects: d.CompletedProjects || 0,
       hourlyRate: d.HourlyRate || 0,
-      skills: (d.FreelancerSkills || []).map(s => s.Skill),
+      skills: (d.Freelancers?.FreelancerSkills || d.FreelancerSkills || []).map(s => s.Skill),
       specialty: d.Specialty || '',
       availability: d.Availability || '',
       lastActive: dayjs(d.LastActive).fromNow(),

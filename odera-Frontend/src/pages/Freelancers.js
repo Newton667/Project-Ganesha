@@ -29,6 +29,15 @@ function Freelancers() {
   const [accountType, setAccountType] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
 
+  const [chats, setChats] = useState([]);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [projectFilter, setProjectFilter] = useState('All');
+  const [opportunityCategoryFilter, setOpportunityCategoryFilter] = useState('All Categories');
+  const [opportunityBudgetFilter, setOpportunityBudgetFilter] = useState('All Budgets');
+
   // Fetch account type
   useEffect(() => {
     const token = session?.access_token;
@@ -111,6 +120,45 @@ function Freelancers() {
     return () => { cancelled = true; };
   }, [session]);
 
+  // Fetch active chats specific to the messages tab
+  useEffect(() => {
+    let cancelled = false;
+    const fetchChats = async () => {
+      if (!session?.access_token || !activeProjects.length) return;
+      setLoadingChats(true);
+      const chatsWithMessages = [];
+      for (const project of activeProjects) {
+        const contractId = project.contractId || project.id;
+        if (!contractId) continue;
+        try {
+          const res = await fetch(`/api/project/${contractId}/messages`, {
+            headers: { Authorization: `Bearer ${session.access_token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.messages && data.messages.length > 0) {
+              chatsWithMessages.push({
+                project,
+                messages: data.messages
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch messages for project', project.id);
+        }
+      }
+      if (!cancelled) {
+        setChats(chatsWithMessages);
+        setLoadingChats(false);
+      }
+    };
+
+    if (activeSection === 'messages') {
+      fetchChats();
+    }
+    return () => { cancelled = true; };
+  }, [activeSection, activeProjects, session]);
+
   const initials = useMemo(() => {
     const [first, last] = (userData?.name || 'User').split(' ');
     return `${(first?.[0] || 'U').toUpperCase()}${(last?.[0] || '').toUpperCase()}`;
@@ -150,6 +198,82 @@ function Freelancers() {
   const handleCancelPost = () => {
     setShowWarning(false);
   };
+
+  const handleSelectChat = (chat) => {
+    setSelectedChat(chat.project);
+    setChatMessages(chat.messages);
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedChat) return;
+
+    const contractId = selectedChat.contractId || selectedChat.id;
+    try {
+      const res = await fetch(`/api/project/${contractId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: newMessage })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setChatMessages(prev => [...prev, data.message]);
+        setNewMessage('');
+        setChats(prevChats => prevChats.map(c => 
+          (c.project.id === selectedChat.id) 
+            ? { ...c, messages: [...c.messages, data.message] }
+            : c
+        ));
+      }
+    } catch (err) {
+      console.error('Failed to send message', err);
+    }
+  };
+
+  const filteredProjects = useMemo(() => {
+    return activeProjects.filter(project => {
+      if (projectFilter === 'All') return true;
+      const status = (project.status || '').toLowerCase();
+      if (projectFilter === 'Active') {
+        return status.includes('assigned') || status.includes('active') || status.includes('progress');
+      }
+      if (projectFilter === 'Completed') {
+        return status.includes('complete');
+      }
+      if (projectFilter === 'Pending') {
+        return status.includes('open') || status.includes('pending');
+      }
+      return true;
+    });
+  }, [activeProjects, projectFilter]);
+
+  const opportunityCategories = useMemo(() => {
+    const categories = new Set();
+    opportunities.forEach(opp => {
+      (opp.skills || []).forEach(skill => categories.add(skill));
+    });
+    return ['All Categories', ...Array.from(categories).sort()];
+  }, [opportunities]);
+
+  const filteredOpportunities = useMemo(() => {
+    return opportunities.filter(opp => {
+      if (opportunityCategoryFilter !== 'All Categories') {
+        if (!(opp.skills || []).includes(opportunityCategoryFilter)) {
+          return false;
+        }
+      }
+      if (opportunityBudgetFilter !== 'All Budgets') {
+        const budgetVal = parseInt(String(opp.budget || '0').replace(/[^0-9]/g, ''), 10);
+        if (opportunityBudgetFilter === 'Under $500' && budgetVal >= 500) return false;
+        if (opportunityBudgetFilter === '$500-$1000' && (budgetVal < 500 || budgetVal > 1000)) return false;
+        if (opportunityBudgetFilter === '$1000+' && budgetVal <= 1000) return false;
+      }
+      return true;
+    });
+  }, [opportunities, opportunityCategoryFilter, opportunityBudgetFilter]);
 
   const renderOverview = () => (
     <div className="overview-content">
@@ -264,19 +388,23 @@ function Freelancers() {
       <div className="section-header">
         <h2>My Projects</h2>
         <div className="project-filters">
-          <button className="filter-btn active">All</button>
-          <button className="filter-btn">Active</button>
-          <button className="filter-btn">Completed</button>
-          <button className="filter-btn">Pending</button>
+          <button className={`filter-btn ${projectFilter === 'All' ? 'active' : ''}`} onClick={() => setProjectFilter('All')}>All</button>
+          <button className={`filter-btn ${projectFilter === 'Active' ? 'active' : ''}`} onClick={() => setProjectFilter('Active')}>Active</button>
+          <button className={`filter-btn ${projectFilter === 'Completed' ? 'active' : ''}`} onClick={() => setProjectFilter('Completed')}>Completed</button>
+          <button className={`filter-btn ${projectFilter === 'Pending' ? 'active' : ''}`} onClick={() => setProjectFilter('Pending')}>Pending</button>
         </div>
       </div>
       <div className="projects-grid">
-        {activeProjects.length === 0 && (
+        {activeProjects.length === 0 && projectFilter === 'All' ? (
           <div className="project-card">
             <p>No projects found. Start browsing opportunities to find your first project!</p>
           </div>
-        )}
-        {activeProjects.map(project => (
+        ) : filteredProjects.length === 0 ? (
+          <div className="project-card">
+            <p>No projects found matching the selected filter.</p>
+          </div>
+        ) : (
+          filteredProjects.map(project => (
           <div key={project.id} className="project-card detailed">
             <div className="project-header">
               <h3>{project.title}</h3>
@@ -310,36 +438,111 @@ function Freelancers() {
               <button className="btn-primary" onClick={() => navigate(`/project/${project.id}`)}>Open Project</button>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
 
+  
   const renderMessages = () => (
-    <div className="messages-content">
-      <div className="section-header">
-        <h2>Messages</h2>
-        <button className="btn-primary">Compose</button>
+    <div className="messages-content" style={{ display: 'flex', gap: '20px', minHeight: '600px' }}>
+      <div className="chats-sidebar" style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div className="section-header" style={{ marginBottom: 0 }}>
+          <h2>Chats</h2>
+        </div>
+        <div className="messages-list" style={{ overflowY: 'auto', flex: 1, paddingRight: '10px' }}>
+          {loadingChats ? (
+            <div className="message-item"><p>Loading active chats...</p></div>
+          ) : chats.length === 0 ? (
+            <div className="message-item"><p>No active chats with messages.</p></div>
+          ) : (
+            chats.map(chat => {
+              const lastMsg = chat.messages[chat.messages.length - 1];
+              const isSelected = selectedChat?.id === chat.project.id;
+              return (
+                <div 
+                  key={chat.project.id} 
+                  className={`message-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => handleSelectChat(chat)}
+                  style={{ 
+                    cursor: 'pointer', 
+                    borderLeft: isSelected ? '4px solid #007bff' : 'none',
+                    opacity: isSelected ? 1 : 0.8
+                  }}
+                >
+                  <div className="message-header">
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{chat.project.title || 'Untitled Project'}</h3>
+                  </div>
+                  <p className="message-preview" style={{ marginTop: '8px', fontSize: '0.9rem' }}>
+                    {lastMsg?.content}
+                  </p>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
-      <div className="messages-list">
-        {messages.length === 0 && (
-          <div className="message-item">
-            <p>No messages yet. Your client communications will appear here.</p>
+
+      <div className="chat-window" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '10px', overflow: 'hidden' }}>
+        {selectedChat ? (
+          <>
+            <div className="chat-header" style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+              <h3 style={{ margin: 0 }}>{selectedChat.title || 'Untitled Project'}</h3>
+            </div>
+            <div className="chat-messages" style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {chatMessages.map(msg => (
+                <div 
+                  key={msg.id} 
+                  style={{
+                    alignSelf: msg.isMine ? 'flex-end' : 'flex-start',
+                    backgroundColor: msg.isMine ? '#007bff' : 'rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    padding: '12px 18px',
+                    borderRadius: '20px',
+                    borderBottomRightRadius: msg.isMine ? '5px' : '20px',
+                    borderBottomLeftRadius: msg.isMine ? '20px' : '5px',
+                    maxWidth: '75%'
+                  }}
+                >
+                  <p style={{ margin: 0, lineHeight: '1.4' }}>{msg.content}</p>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', display: 'block', marginTop: '8px', textAlign: msg.isMine ? 'right' : 'left' }}>
+                    {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <form onSubmit={handleSendMessage} style={{ display: 'flex', padding: '20px', gap: '10px', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+              <input 
+                type="text" 
+                value={newMessage} 
+                onChange={(e) => setNewMessage(e.target.value)} 
+                placeholder="Type a message..." 
+                style={{ 
+                  flex: 1, 
+                  padding: '12px 20px', 
+                  borderRadius: '25px', 
+                  border: '1px solid rgba(255,255,255,0.2)', 
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  color: '#fff',
+                  outline: 'none'
+                }}
+              />
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={!newMessage.trim()}
+                style={{ borderRadius: '25px', padding: '0 25px' }}
+              >
+                Send
+              </button>
+            </form>
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.5)' }}>
+            <p>Select a chat from the left to start messaging</p>
           </div>
         )}
-        {messages.map(message => (
-          <div key={message.id} className={`message-item ${message.unread ? 'unread' : ''}`}>
-            <div className="message-header">
-              <h3>{message.client || 'Unknown Client'}</h3>
-              <span className="message-time">{message.time || '—'}</span>
-            </div>
-            <p className="message-preview">{message.message || 'No message content'}</p>
-            <div className="message-actions">
-              <button className="btn-secondary">Reply</button>
-              <button className="btn-link">Mark as Read</button>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -349,27 +552,38 @@ function Freelancers() {
       <div className="section-header">
         <h2>Available Opportunities</h2>
         <div className="opportunity-filters">
-          <select className="filter-select">
-            <option>All Categories</option>
-            <option>Web Development</option>
-            <option>Mobile Apps</option>
-            <option>Design</option>
+          <select 
+            className="filter-select"
+            value={opportunityCategoryFilter}
+            onChange={(e) => setOpportunityCategoryFilter(e.target.value)}
+          >
+            {opportunityCategories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
           </select>
-          <select className="filter-select">
-            <option>All Budgets</option>
-            <option>Under $500</option>
-            <option>$500-$1000</option>
-            <option>$1000+</option>
+          <select 
+            className="filter-select"
+            value={opportunityBudgetFilter}
+            onChange={(e) => setOpportunityBudgetFilter(e.target.value)}
+          >
+            <option value="All Budgets">All Budgets</option>
+            <option value="Under $500">Under $500</option>
+            <option value="$500-$1000">$500-$1000</option>
+            <option value="$1000+">$1000+</option>
           </select>
         </div>
       </div>
       <div className="opportunities-list">
-        {opportunities.length === 0 && (
+        {opportunities.length === 0 && opportunityCategoryFilter === 'All Categories' && opportunityBudgetFilter === 'All Budgets' ? (
           <div className="opportunity-item">
             <p>No opportunities available at the moment. Check back later for new projects!</p>
           </div>
-        )}
-        {opportunities.map(opportunity => (
+        ) : filteredOpportunities.length === 0 ? (
+          <div className="opportunity-item">
+            <p>No opportunities found matching the selected filters.</p>
+          </div>
+        ) : (
+          filteredOpportunities.map(opportunity => (
           <div key={opportunity.id} className={`opportunity-item urgency-${opportunity.urgency || 'low'}`}>
             <div className="opportunity-header">
               <h3>{opportunity.title || 'Untitled Project'}</h3>
@@ -393,7 +607,8 @@ function Freelancers() {
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

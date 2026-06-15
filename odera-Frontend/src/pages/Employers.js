@@ -28,6 +28,17 @@ function Employers() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [chats, setChats] = useState([]);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [projectFilter, setProjectFilter] = useState('All');
+  const [applicationProjectFilter, setApplicationProjectFilter] = useState('All Projects');
+  const [applicationStatusFilter, setApplicationStatusFilter] = useState('All Statuses');
+  const [developerSkillFilter, setDeveloperSkillFilter] = useState('All Skills');
+  const [developerRateFilter, setDeveloperRateFilter] = useState('All Rates');
+
   // Load data when session becomes available
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +102,45 @@ function Employers() {
     load();
     return () => { cancelled = true; };
   }, [session]);
+
+  // Fetch active chats specific to the messages tab
+  useEffect(() => {
+    let cancelled = false;
+    const fetchChats = async () => {
+      if (!session?.access_token || !activeProjects.length) return;
+      setLoadingChats(true);
+      const chatsWithMessages = [];
+      for (const project of activeProjects) {
+        const contractId = project.contractId || project.id;
+        if (!contractId) continue;
+        try {
+          const res = await fetch(`/api/project/${contractId}/messages`, {
+            headers: { Authorization: `Bearer ${session.access_token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.messages && data.messages.length > 0) {
+              chatsWithMessages.push({
+                project,
+                messages: data.messages
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch messages for project', project.id);
+        }
+      }
+      if (!cancelled) {
+        setChats(chatsWithMessages);
+        setLoadingChats(false);
+      }
+    };
+
+    if (activeSection === 'messages') {
+      fetchChats();
+    }
+    return () => { cancelled = true; };
+  }, [activeSection, activeProjects, session]);
 
   const initials = useMemo(() => {
     const [first, last] = (userData?.companyName || 'Your Company').split(' ');
@@ -168,6 +218,40 @@ function Employers() {
     }
   };
 
+  const handleSelectChat = (chat) => {
+    setSelectedChat(chat.project);
+    setChatMessages(chat.messages);
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedChat) return;
+
+    const contractId = selectedChat.contractId || selectedChat.id;
+    try {
+      const res = await fetch(`/api/project/${contractId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: newMessage })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setChatMessages(prev => [...prev, data.message]);
+        setNewMessage('');
+        setChats(prevChats => prevChats.map(c => 
+          (c.project.id === selectedChat.id) 
+            ? { ...c, messages: [...c.messages, data.message] }
+            : c
+        ));
+      }
+    } catch (err) {
+      console.error('Failed to send message', err);
+    }
+  };
+
   const handleViewProject = (project) => {
     if (project.contractId) {
       navigate(`/project/${project.contractId}`);
@@ -180,6 +264,66 @@ function Employers() {
   const handlePostProject = () => {
     navigate('/create-projects');
   };
+
+  const filteredProjects = useMemo(() => {
+    return activeProjects.filter(project => {
+      if (projectFilter === 'All') return true;
+      const status = (project.status || '').toLowerCase();
+      if (projectFilter === 'Active') {
+        return status.includes('assigned') || status.includes('active') || status.includes('progress');
+      }
+      if (projectFilter === 'Completed') {
+        return status.includes('complete');
+      }
+      if (projectFilter === 'Pending') {
+        return status.includes('open') || status.includes('pending');
+      }
+      return true;
+    });
+  }, [activeProjects, projectFilter]);
+
+  const applicationProjects = useMemo(() => {
+    const projects = recentApplications.map(app => app.projectTitle).filter(Boolean);
+    return ['All Projects', ...new Set(projects)];
+  }, [recentApplications]);
+
+  const filteredApplications = useMemo(() => {
+    return recentApplications.filter(app => {
+      if (applicationProjectFilter !== 'All Projects' && app.projectTitle !== applicationProjectFilter) {
+        return false;
+      }
+      if (applicationStatusFilter !== 'All Statuses') {
+        const status = app.status || 'Pending Review';
+        if (status.toLowerCase() !== applicationStatusFilter.toLowerCase()) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [recentApplications, applicationProjectFilter, applicationStatusFilter]);
+
+  const developerSkills = useMemo(() => {
+    const skills = new Set();
+    availableDevelopers.forEach(dev => {
+      (dev.skills || []).forEach(s => skills.add(s));
+    });
+    return ['All Skills', ...Array.from(skills).sort()];
+  }, [availableDevelopers]);
+
+  const filteredDevelopers = useMemo(() => {
+    return availableDevelopers.filter(dev => {
+      if (developerSkillFilter !== 'All Skills') {
+        if (!(dev.skills || []).includes(developerSkillFilter)) return false;
+      }
+      if (developerRateFilter !== 'All Rates') {
+        const rate = parseInt(String(dev.hourlyRate || '0').replace(/[^0-9]/g, ''), 10);
+        if (developerRateFilter === 'Under $25/hr' && rate >= 25) return false;
+        if (developerRateFilter === '$25-$35/hr' && (rate < 25 || rate > 35)) return false;
+        if (developerRateFilter === '$35+/hr' && rate <= 35) return false;
+      }
+      return true;
+    });
+  }, [availableDevelopers, developerSkillFilter, developerRateFilter]);
 
   const renderOverview = () => (
     <div className="overview-content">
@@ -301,21 +445,25 @@ function Employers() {
         <h2>My Projects</h2>
         <div className="project-actions">
           <div className="project-filters">
-            <button className="filter-btn active">All</button>
-            <button className="filter-btn">Active</button>
-            <button className="filter-btn">Completed</button>
-            <button className="filter-btn">Pending</button>
+            <button className={`filter-btn ${projectFilter === 'All' ? 'active' : ''}`} onClick={() => setProjectFilter('All')}>All</button>
+            <button className={`filter-btn ${projectFilter === 'Active' ? 'active' : ''}`} onClick={() => setProjectFilter('Active')}>Active</button>
+            <button className={`filter-btn ${projectFilter === 'Completed' ? 'active' : ''}`} onClick={() => setProjectFilter('Completed')}>Completed</button>
+            <button className={`filter-btn ${projectFilter === 'Pending' ? 'active' : ''}`} onClick={() => setProjectFilter('Pending')}>Pending</button>
           </div>
           <button className="btn-primary" onClick={handlePostProject}>Post New Project</button>
         </div>
       </div>
       <div className="projects-grid">
-        {activeProjects.length === 0 ? (
+        {activeProjects.length === 0 && projectFilter === 'All' ? (
           <div className="empty-state-projects">
             <p>No projects found. Create your first project to get started!</p>
           </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="empty-state-projects">
+            <p>No projects found matching the selected filter.</p>
+          </div>
         ) : (
-          activeProjects.map(project => (
+          filteredProjects.map(project => (
             <div key={project.id} className="project-card detailed">
             <div className="project-header">
               <h3>{project.title || 'Untitled Project'}</h3>
@@ -377,24 +525,38 @@ function Employers() {
       <div className="section-header">
         <h2>Recent Applications</h2>
         <div className="application-filters">
-          <select className="filter-select">
-            <option>All Projects</option>
+          <select 
+            className="filter-select"
+            value={applicationProjectFilter}
+            onChange={(e) => setApplicationProjectFilter(e.target.value)}
+          >
+            {applicationProjects.map(proj => (
+              <option key={proj} value={proj}>{proj}</option>
+            ))}
           </select>
-          <select className="filter-select">
-            <option>All Statuses</option>
-            <option>Pending Review</option>
-            <option>Reviewed</option>
-            <option>Accepted</option>
+          <select 
+            className="filter-select"
+            value={applicationStatusFilter}
+            onChange={(e) => setApplicationStatusFilter(e.target.value)}
+          >
+            <option value="All Statuses">All Statuses</option>
+            <option value="Pending Review">Pending Review</option>
+            <option value="Reviewed">Reviewed</option>
+            <option value="Accepted">Accepted</option>
           </select>
         </div>
       </div>
       <div className="applications-list">
-        {recentApplications.length === 0 && (
+        {recentApplications.length === 0 && applicationProjectFilter === 'All Projects' && applicationStatusFilter === 'All Statuses' ? (
           <div className="application-card">
             <p>No applications yet. Your project applications will appear here.</p>
           </div>
-        )}
-        {recentApplications.map(application => (
+        ) : filteredApplications.length === 0 ? (
+          <div className="application-card">
+            <p>No applications found matching the selected filters.</p>
+          </div>
+        ) : (
+          filteredApplications.map(application => (
           <div key={application.id} className="application-card">
             <div className="application-header">
               <div className="applicant-info">
@@ -451,52 +613,109 @@ function Employers() {
               </button>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
 
   const renderMessages = () => (
-    <div className="messages-content">
-      <div className="section-header">
-        <h2>Messages</h2>
-        <button className="btn-primary">Compose Message</button>
-      </div>
-      <div className="messages-list">
-        {messages.length === 0 ? (
-          <div className="message-item"><p>No messages yet.</p></div>
-        ) : (
-          messages.map(message => (
-            <div 
-              key={message.id} 
-              className={`message-item ${message.unread ? 'unread-style' : ''}`}
-            >
-              <div className="message-header">
-                <div className="sender-info">
-                  <div className="sender-avatar">{message.fromAvatar}</div>
-                  <div className="sender-details">
-                    <h3>{message.from}</h3>
-                    <span className="project-ref">Project: {message.project}</span>
+    <div className="messages-content" style={{ display: 'flex', gap: '20px', minHeight: '600px' }}>
+      <div className="chats-sidebar" style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div className="section-header" style={{ marginBottom: 0 }}>
+          <h2>Chats</h2>
+        </div>
+        <div className="messages-list" style={{ overflowY: 'auto', flex: 1, paddingRight: '10px' }}>
+          {loadingChats ? (
+            <div className="message-item"><p>Loading active chats...</p></div>
+          ) : chats.length === 0 ? (
+            <div className="message-item"><p>No active chats with messages.</p></div>
+          ) : (
+            chats.map(chat => {
+              const lastMsg = chat.messages[chat.messages.length - 1];
+              const isSelected = selectedChat?.id === chat.project.id;
+              return (
+                <div 
+                  key={chat.project.id} 
+                  className={`message-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => handleSelectChat(chat)}
+                  style={{ 
+                    cursor: 'pointer', 
+                    borderLeft: isSelected ? '4px solid #007bff' : 'none',
+                    opacity: isSelected ? 1 : 0.8
+                  }}
+                >
+                  <div className="message-header">
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{chat.project.title || 'Untitled Project'}</h3>
                   </div>
+                  <p className="message-preview" style={{ marginTop: '8px', fontSize: '0.9rem' }}>
+                    {lastMsg?.content}
+                  </p>
                 </div>
-                <div className="message-meta">
-                  <span className="message-time">{message.time}</span>
-                </div>
-              </div>
-              <p className="message-content">{message.message}</p>
-              <div className="message-actions">
-                <button className="btn-secondary">Reply</button>
-                {message.unread && (
-                  <button 
-                    className="btn-link" 
-                    onClick={() => handleMarkAsRead(message.id)}
-                  >
-                    Mark as Read
-                  </button>
-                )}
-              </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div className="chat-window" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '10px', overflow: 'hidden' }}>
+        {selectedChat ? (
+          <>
+            <div className="chat-header" style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.1)', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+              <h3 style={{ margin: 0 }}>{selectedChat.title || 'Untitled Project'}</h3>
             </div>
-          ))
+            <div className="chat-messages" style={{ flex: 1, padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {chatMessages.map(msg => (
+                <div 
+                  key={msg.id} 
+                  style={{
+                    alignSelf: msg.isMine ? 'flex-end' : 'flex-start',
+                    backgroundColor: msg.isMine ? '#007bff' : 'rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    padding: '12px 18px',
+                    borderRadius: '20px',
+                    borderBottomRightRadius: msg.isMine ? '5px' : '20px',
+                    borderBottomLeftRadius: msg.isMine ? '20px' : '5px',
+                    maxWidth: '75%'
+                  }}
+                >
+                  <p style={{ margin: 0, lineHeight: '1.4' }}>{msg.content}</p>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', display: 'block', marginTop: '8px', textAlign: msg.isMine ? 'right' : 'left' }}>
+                    {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <form onSubmit={handleSendMessage} style={{ display: 'flex', padding: '20px', gap: '10px', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+              <input 
+                type="text" 
+                value={newMessage} 
+                onChange={(e) => setNewMessage(e.target.value)} 
+                placeholder="Type a message..." 
+                style={{ 
+                  flex: 1, 
+                  padding: '12px 20px', 
+                  borderRadius: '25px', 
+                  border: '1px solid rgba(255,255,255,0.2)', 
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  color: '#fff',
+                  outline: 'none'
+                }}
+              />
+              <button 
+                type="submit" 
+                className="btn-primary" 
+                disabled={!newMessage.trim()}
+                style={{ borderRadius: '25px', padding: '0 25px' }}
+              >
+                Send
+              </button>
+            </form>
+          </>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.5)' }}>
+            <p>Select a chat from the left to start messaging</p>
+          </div>
         )}
       </div>
     </div>
@@ -507,28 +726,38 @@ function Employers() {
       <div className="section-header">
         <h2>Available Developers</h2>
         <div className="developer-filters">
-          <select className="filter-select">
-            <option>All Skills</option>
-            <option>React</option>
-            <option>Mobile Development</option>
-            <option>UI/UX Design</option>
-            <option>Python</option>
+          <select 
+            className="filter-select"
+            value={developerSkillFilter}
+            onChange={(e) => setDeveloperSkillFilter(e.target.value)}
+          >
+            {developerSkills.map(skill => (
+              <option key={skill} value={skill}>{skill}</option>
+            ))}
           </select>
-          <select className="filter-select">
-            <option>All Rates</option>
-            <option>Under $25/hr</option>
-            <option>$25-$35/hr</option>
-            <option>$35+/hr</option>
+          <select 
+            className="filter-select"
+            value={developerRateFilter}
+            onChange={(e) => setDeveloperRateFilter(e.target.value)}
+          >
+            <option value="All Rates">All Rates</option>
+            <option value="Under $25/hr">Under $25/hr</option>
+            <option value="$25-$35/hr">$25-$35/hr</option>
+            <option value="$35+/hr">$35+/hr</option>
           </select>
         </div>
       </div>
       <div className="developers-grid">
-        {availableDevelopers.length === 0 && (
+        {availableDevelopers.length === 0 && developerSkillFilter === 'All Skills' && developerRateFilter === 'All Rates' ? (
           <div className="developer-card">
             <p>No developers available at the moment. Check back later!</p>
           </div>
-        )}
-        {availableDevelopers.map(developer => (
+        ) : filteredDevelopers.length === 0 ? (
+          <div className="developer-card">
+            <p>No developers found matching the selected filters.</p>
+          </div>
+        ) : (
+          filteredDevelopers.map(developer => (
           <div key={developer.id} className="developer-card">
             <div className="developer-header">
               <div className="developer-avatar">{developer.avatar || 'D'}</div>
@@ -575,7 +804,8 @@ function Employers() {
               <button className="btn-primary">Invite to Project</button>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

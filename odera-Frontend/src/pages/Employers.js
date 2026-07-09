@@ -27,6 +27,7 @@ function Employers() {
   const [availableDevelopers, setAvailableDevelopers] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
@@ -157,6 +158,11 @@ function Employers() {
     }
   };
 
+  const handleNotificationClick = (e) => {
+    e.stopPropagation();
+    setShowNotifications(prev => !prev);
+  };
+
   const handleMarkAsRead = async (messageId) => {
     if (!session?.access_token) return;
 
@@ -173,7 +179,7 @@ function Employers() {
 
       // Optimistic UI Update: update the local state immediately
       setMessages(prevMessages =>
-        prevMessages.map(msg => 
+        prevMessages.map(msg =>
           msg.id === messageId ? { ...msg, unread: false } : msg
         )
       );
@@ -240,9 +246,9 @@ function Employers() {
       if (res.ok) {
         const data = await res.json();
         setChatMessages(prev => [...prev, data.message]);
-        setNewMessage('');
-        setChats(prevChats => prevChats.map(c => 
-          (c.project.id === selectedChat.id) 
+        setNewMessage("");
+        setChats(prevChats => prevChats.map(c =>
+          (c.project.id === selectedChat.id)
             ? { ...c, messages: [...c.messages, data.message] }
             : c
         ));
@@ -254,7 +260,7 @@ function Employers() {
 
   const handleViewProject = (project) => {
     if (project.contractId) {
-      navigate(`/project/${project.contractId}`);
+      navigate(`/project/${project.contractId}`)
     } else {
       alert('No contract exists for this job yet. A contract is created when you accept an application.');
     }
@@ -848,8 +854,9 @@ function Employers() {
     );
   }
 
-  const unreadMessages = messages.filter(msg => msg.unread).length;
+  const unreadMessages = messages.filter(msg => msg.unread);
   const pendingApplications = recentApplications.length;
+  const notificationCount = unreadMessages.length + pendingApplications;
 
   return (
     <div className="employer-dashboard">
@@ -867,10 +874,39 @@ function Employers() {
           </div>
         </div>
         <div className="header-actions">
-          <button className="notification-btn">
-            <span className="notification-icon">🔔</span>
-            <span className="notification-count">5</span>
-          </button>
+          <div className="notification-wrapper">
+            <button className="notification-btn" onClick={handleNotificationClick}>
+              <span className="notification-icon">🔔</span>
+              {notificationCount > 0 && <span className="notification-count">{notificationCount}</span>}
+            </button>
+            {showNotifications && (
+              <div className="notification-dropdown">
+                <div className="notification-header">
+                  <h3>Notifications</h3>
+                </div>
+                <div className="notification-list">
+                  {notificationCount > 0 ? (
+                    <>
+                      {unreadMessages.map(msg => (
+                        <div key={`msg-${msg.id}`} className="notification-item" onClick={() => handleMarkAsRead(msg.id)}>
+                          <p><strong>New Message:</strong> {msg.content}</p>
+                          <span className="notification-time">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                      ))}
+                      {recentApplications.map(app => (
+                        <div key={`app-${app.id}`} className="notification-item" onClick={() => setActiveSection('applications')}>
+                          <p><strong>New Application:</strong> {app.applicant} applied for "{app.projectTitle}".</p>
+                          <span className="notification-time">{app.appliedTime}</span>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="notification-item"><p>No new notifications.</p></div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <button className="profile-btn" onClick={() => navigate("/dashboard/employers/settings")}>
             Settings
           </button>
@@ -911,7 +947,7 @@ function Employers() {
         >
           <span className="nav-icon">💬</span>
           Messages
-          {unreadMessages > 0 && <span className="nav-badge">{unreadMessages}</span>}
+          {unreadMessages.length > 0 && <span className="nav-badge">{unreadMessages.length}</span>}
         </button>
         <button 
           className={`nav-item ${activeSection === 'developers' ? 'active' : ''}`}

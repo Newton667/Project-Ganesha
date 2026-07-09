@@ -1176,3 +1176,79 @@ body {
     gap: 0.25rem;
   }
 }
+
+/* Add to Employers.css */
+.notification-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 10px); /* Position below the button with a small gap */
+  right: 0;
+  width: 350px;
+  background-color: #2a2a2a; /* Match card background */
+  border: 1px solid #444; /* Match card border */
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  color: #f5f5f5;
+  overflow: hidden;
+  animation: dropdown-fade-in 0.2s ease-out;
+}
+
+@keyframes dropdown-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-header {
+  padding: 1rem;
+  border-bottom: 1px solid #444;
+  background-color: #222; /* Slightly darker header */
+}
+
+.notification-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 1rem;
+  border-bottom: 1px solid #444;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background-color: #333;
+}
+
+.notification-item p {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #ddd;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: #888; /* Softer color for time */
+}

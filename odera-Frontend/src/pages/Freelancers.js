@@ -27,6 +27,7 @@ function Freelancers() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accountType, setAccountType] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
 
   const [chats, setChats] = useState([]);
@@ -232,6 +233,21 @@ function Freelancers() {
       console.error('Failed to send message', err);
     }
   };
+
+  const handleNotificationClick = (e) => {
+    e.stopPropagation();
+    setShowNotifications(prev => !prev);
+  };
+
+  const handleMarkMessageRead = (messageId) => {
+    // This is a mock-up. In a real app, you'd send a request to the backend.
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, unread: false } : msg
+    ));
+  };
+
+  const unreadMessages = useMemo(() => messages.filter(msg => msg.unread), [messages]);
+  const notificationCount = unreadMessages.length;
 
   const filteredProjects = useMemo(() => {
     return activeProjects.filter(project => {
@@ -650,8 +666,6 @@ function Freelancers() {
     );
   }
 
-  const unreadMessages = messages.filter(msg => msg.unread).length;
-
   return (
     <div className="freelancer-dashboard">
       <div className="navbar-area"></div>
@@ -670,10 +684,33 @@ function Freelancers() {
             <span className="plus-icon">+</span>
             Post New Job
           </button>
-          <button className="notification-btn">
-            <span className="notification-icon">🔔</span>
-            <span className="notification-count">3</span>
-          </button>
+          <div className="notification-wrapper">
+            <button className="notification-btn" onClick={handleNotificationClick}>
+              <span className="notification-icon">🔔</span>
+              {notificationCount > 0 && <span className="notification-count">{notificationCount}</span>}
+            </button>
+            {showNotifications && (
+              <div className="notification-dropdown">
+                <div className="notification-header">
+                  <h3>Notifications</h3>
+                </div>
+                <div className="notification-list">
+                  {notificationCount > 0 ? (
+                    unreadMessages.map(msg => (
+                      <div key={msg.id} className="notification-item" onClick={() => handleMarkMessageRead(msg.id)}>
+                        <p><strong>New Message:</strong> {msg.content}</p>
+                        <span className="notification-time">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="notification-item">
+                      <p>No new notifications.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <button className="profile-btn" onClick={() => navigate("/dashboard/freelancers/settings")}>
             Settings
           </button>
@@ -704,7 +741,7 @@ function Freelancers() {
         >
           <span className="nav-icon">💬</span>
           Messages
-          {unreadMessages > 0 && <span className="nav-badge">{unreadMessages}</span>}
+          {notificationCount > 0 && <span className="nav-badge">{notificationCount}</span>}
         </button>
         <button
           className={`nav-item ${activeSection === 'opportunities' ? 'active' : ''}`}

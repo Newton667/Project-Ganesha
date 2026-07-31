@@ -579,7 +579,7 @@ function Employers() {
               <div className="application-proposal">
                 <div className="proposal-item">
                   <span className="label">Budget</span>
-                  <span className="value">${application.proposedBudget ?? 0}</span>
+                  <span className="value">Not specified</span>
                 </div>
                 <div className="proposal-item">
                   <span className="label">Timeline</span>
@@ -887,12 +887,22 @@ function Employers() {
                 <div className="notification-list">
                   {notificationCount > 0 ? (
                     <>
-                      {unreadMessages.map(msg => (
-                        <div key={`msg-${msg.id}`} className="notification-item" onClick={() => handleMarkAsRead(msg.id)}>
-                          <p><strong>New Message:</strong> {msg.content}</p>
-                          <span className="notification-time">{new Date(msg.timestamp).toLocaleTimeString()}</span>
-                        </div>
-                      ))}
+                      {unreadMessages.map(msg => {
+                        const isSystem = msg.type === 'system';
+                        return (
+                          <div
+                            key={`msg-${msg.id}`}
+                            className={`notification-item${isSystem ? ' notification-item-system' : ''}`}
+                            onClick={() => handleMarkAsRead(msg.id)}
+                          >
+                            <p>
+                              {isSystem && <span className="notification-type-icon" aria-hidden="true">✅ </span>}
+                              <strong>{isSystem ? 'Update:' : 'New Message:'}</strong> {msg.content}
+                            </p>
+                            <span className="notification-time">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+                          </div>
+                        );
+                      })}
                       {recentApplications.map(app => (
                         <div key={`app-${app.id}`} className="notification-item" onClick={() => setActiveSection('applications')}>
                           <p><strong>New Application:</strong> {app.applicant} applied for "{app.projectTitle}".</p>

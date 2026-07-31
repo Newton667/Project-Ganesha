@@ -940,6 +940,19 @@ body {
   color: #ddd;
 }
 
+.notification-item-system {
+  background-color: rgba(76, 175, 80, 0.12);
+  border-left: 3px solid #4caf50;
+}
+
+.notification-item-system:hover {
+  background-color: rgba(76, 175, 80, 0.2);
+}
+
+.notification-type-icon {
+  margin-right: 0.15rem;
+}
+
 .notification-time {
   font-size: 0.75rem;
   color: #888; /* Softer color for time */

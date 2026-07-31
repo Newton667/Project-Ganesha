@@ -712,12 +712,22 @@ function Freelancers() {
                 </div>
                 <div className="notification-list">
                   {notificationCount > 0 ? (
-                    unreadMessages.map(msg => (
-                      <div key={msg.id} className="notification-item" onClick={() => handleMarkMessageRead(msg.id)}>
-                        <p><strong>New Message:</strong> {msg.content}</p>
-                        <span className="notification-time">{new Date(msg.timestamp).toLocaleTimeString()}</span>
-                      </div>
-                    ))
+                    unreadMessages.map(msg => {
+                      const isSystem = msg.type === 'system';
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`notification-item${isSystem ? ' notification-item-system' : ''}`}
+                          onClick={() => handleMarkMessageRead(msg.id)}
+                        >
+                          <p>
+                            {isSystem && <span className="notification-type-icon" aria-hidden="true">✅ </span>}
+                            <strong>{isSystem ? 'Update:' : 'New Message:'}</strong> {msg.content}
+                          </p>
+                          <span className="notification-time">{new Date(msg.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                      );
+                    })
                   ) : (
                     <div className="notification-item">
                       <p>No new notifications.</p>

@@ -291,7 +291,7 @@ router.patch('/employeraccept/:applicationId', authMiddleware, async (req, res) 
     // Verify employer owns the job
     const { data: job, error: jobErr } = await supabase
       .from('Jobs')
-      .select('EmployerID, BudgetMin, BudgetMax, FreelancerID')
+      .select('EmployerID, BudgetMin, BudgetMax, FreelancerID, JobTitle')
       .eq('JobID', app.JobID)
       .maybeSingle();
 
@@ -333,6 +333,25 @@ router.patch('/employeraccept/:applicationId', authMiddleware, async (req, res) 
       });
 
     if (contractErr) console.error('[accept] contract creation error:', contractErr);
+
+    // Notify the freelancer of the acceptance (non-critical — never block/fail the accept flow)
+    try {
+      const jobTitle = job.JobTitle || 'the job';
+      const { error: notifyErr } = await supabase
+        .from('Messages')
+        .insert({
+          senderid: userId,
+          receiverid: app.FreelancerID,
+          projectid: app.JobID,
+          content: `Your application for '${jobTitle}' was accepted!`,
+          type: 'system',
+          isunread: true,
+        });
+
+      if (notifyErr) console.error('[accept] system notification insert error:', notifyErr);
+    } catch (notifyEx) {
+      console.error('[accept] system notification unhandled error:', notifyEx);
+    }
 
     res.json({ success: true, message: 'Application accepted and contract created' });
   } catch (e) {

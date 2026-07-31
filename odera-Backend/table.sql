@@ -102,7 +102,6 @@ CREATE TABLE public.JobApplications (
   Status character varying,
   Experience character varying,
   Timeline character varying,
-  Rating double precision,
   CoverLetter character varying,
   FreelancerSkillID uuid,
   CONSTRAINT JobApplications_pkey PRIMARY KEY (ApplicationID),

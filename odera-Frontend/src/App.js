@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import PublicRoute from './components/PublicRoute';
+import AdminRoute from './components/AdminRoute';
 import Employers from './pages/Employers';
 import Freelancers from './pages/Freelancers';
 import FreelancerSettings from './pages/FreelancerSettings';
@@ -110,7 +111,7 @@ function App() {
           <Route path="/project/:contractId" element={<><Navbar /><PrivateRoute><ProjectView /></PrivateRoute></>} />
 
           {/* Admin Dashboard */}
-          <Route path="/admin" element={<><Navbar /><PrivateRoute><AdminDashboard /></PrivateRoute></>} />
+          <Route path="/admin" element={<><Navbar /><AdminRoute><AdminDashboard /></AdminRoute></>} />
 
           {/* Optional 404 redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />

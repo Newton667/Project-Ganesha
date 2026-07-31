@@ -3,6 +3,9 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../config/supabaseClient');
 const authMiddleware = require('../config/authMiddleware');
+// Uses the shared service-role client so the Admins table lookup cannot be
+// hidden by RLS, mirroring the check in config/adminAuth.js's verifyAdmin.
+const supabaseAdmin = require('../config/supabaseAdminClient');
 
 /**
  * GET /api/account-info
@@ -62,13 +65,25 @@ router.get('/', authMiddleware, async (req, res) => {
       accountCreated = freelancer.AccountCreated;
     }
 
-    console.log('[account-info] Result:', { accountType, accountCreated });
+    // Check if user is an admin
+    const { data: admin, error: adminError } = await supabaseAdmin
+      .from('admins')
+      .select('adminid')
+      .eq('adminid', userId)
+      .maybeSingle();
+
+    if (adminError) {
+      console.error('[GET /account-info] admin lookup error:', adminError);
+    }
+
+    console.log('[account-info] Result:', { accountType, accountCreated, isAdmin: !!admin });
 
     res.json({
       accountType,
       accountCreated,
       isEmployer: !!employer,
-      isFreelancer: !!freelancer
+      isFreelancer: !!freelancer,
+      isAdmin: !!admin
     });
 
   } catch (e) {

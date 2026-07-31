@@ -4,21 +4,49 @@ import './AdminDashboard.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE || '';
 
+// Default pagination state shared by every paginated list.
+const initialPagination = { page: 1, pageSize: 50, total: 0 };
+
 export default function AdminDashboard() {
     const [metrics, setMetrics] = useState(null);
     const [users, setUsers] = useState([]);
     const [jobs, setJobs] = useState([]);
     const [contracts, setContracts] = useState([]);
     const [messages, setMessages] = useState([]);
+    const [usersPagination, setUsersPagination] = useState(initialPagination);
+    const [jobsPagination, setJobsPagination] = useState(initialPagination);
+    const [contractsPagination, setContractsPagination] = useState(initialPagination);
+    const [messagesPagination, setMessagesPagination] = useState(initialPagination);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Fetches a single page of a given admin list endpoint and updates the
+    // corresponding data/pagination state. Reused by the initial load and by
+    // the prev/next pager controls for each list.
+    async function fetchListPage(endpoint, setData, setPagination, page = 1) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('You must be logged in to view this page.');
+
+        const res = await fetch(`${API_BASE_URL}/api/admin/${endpoint}?page=${page}`, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+
+        if (!res.ok) {
+            if (res.status === 403) throw new Error('Unauthorized. You are not an Admin.');
+            throw new Error(`Failed to fetch ${endpoint}`);
+        }
+
+        const body = await res.json();
+        setData(body.data);
+        setPagination({ page: body.page, pageSize: body.pageSize, total: body.total });
+    }
+
     useEffect(() => {
-        async function fetchMetrics() {
+        async function fetchDashboard() {
             try {
                 // Grab the current user's JWT
                 const { data: { session } } = await supabase.auth.getSession();
-                
+
                 if (!session) {
                     throw new Error('You must be logged in to view this page.');
                 }
@@ -30,10 +58,10 @@ export default function AdminDashboard() {
                 // Request all necessary dashboard data simultaneously
                 const [metricsRes, usersRes, jobsRes, contractsRes, messagesRes] = await Promise.all([
                     fetch(`${API_BASE_URL}/api/admin/metrics`, { headers }),
-                    fetch(`${API_BASE_URL}/api/admin/users`, { headers }),
-                    fetch(`${API_BASE_URL}/api/admin/jobs`, { headers }),
-                    fetch(`${API_BASE_URL}/api/admin/contracts`, { headers }),
-                    fetch(`${API_BASE_URL}/api/admin/messages`, { headers })
+                    fetch(`${API_BASE_URL}/api/admin/users?page=1`, { headers }),
+                    fetch(`${API_BASE_URL}/api/admin/jobs?page=1`, { headers }),
+                    fetch(`${API_BASE_URL}/api/admin/contracts?page=1`, { headers }),
+                    fetch(`${API_BASE_URL}/api/admin/messages?page=1`, { headers })
                 ]);
 
                 if (!metricsRes.ok || !usersRes.ok || !jobsRes.ok || !contractsRes.ok || !messagesRes.ok) {
@@ -48,10 +76,14 @@ export default function AdminDashboard() {
                 const messagesData = await messagesRes.json();
 
                 setMetrics(metricsData);
-                setUsers(usersData);
-                setJobs(jobsData);
-                setContracts(contractsData);
-                setMessages(messagesData);
+                setUsers(usersData.data);
+                setUsersPagination({ page: usersData.page, pageSize: usersData.pageSize, total: usersData.total });
+                setJobs(jobsData.data);
+                setJobsPagination({ page: jobsData.page, pageSize: jobsData.pageSize, total: jobsData.total });
+                setContracts(contractsData.data);
+                setContractsPagination({ page: contractsData.page, pageSize: contractsData.pageSize, total: contractsData.total });
+                setMessages(messagesData.data);
+                setMessagesPagination({ page: messagesData.page, pageSize: messagesData.pageSize, total: messagesData.total });
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -59,8 +91,21 @@ export default function AdminDashboard() {
             }
         }
 
-        fetchMetrics();
+        fetchDashboard();
     }, []);
+
+    async function goToUsersPage(page) {
+        try { await fetchListPage('users', setUsers, setUsersPagination, page); } catch (err) { alert(err.message); }
+    }
+    async function goToJobsPage(page) {
+        try { await fetchListPage('jobs', setJobs, setJobsPagination, page); } catch (err) { alert(err.message); }
+    }
+    async function goToContractsPage(page) {
+        try { await fetchListPage('contracts', setContracts, setContractsPagination, page); } catch (err) { alert(err.message); }
+    }
+    async function goToMessagesPage(page) {
+        try { await fetchListPage('messages', setMessages, setMessagesPagination, page); } catch (err) { alert(err.message); }
+    }
 
     async function handleDeleteUser(userId) {
         if (!window.confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
@@ -73,9 +118,10 @@ export default function AdminDashboard() {
             });
 
             if (!res.ok) throw new Error('Failed to delete user');
-            
-            // Instantly remove the deleted user from the UI
-            setUsers(users.filter(u => u.id !== userId));
+
+            // Refetch the current page so `total`/pager state stay accurate
+            // (a plain local filter() leaves the pagination total stale).
+            await fetchListPage('users', setUsers, setUsersPagination, usersPagination.page);
             alert('User deleted successfully.');
         } catch (err) {
             alert(err.message);
@@ -109,7 +155,9 @@ export default function AdminDashboard() {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
             if (!res.ok) throw new Error('Failed to delete job. Active references may still exist.');
-            setJobs(jobs.filter(j => j.JobID !== jobId));
+            // Refetch the current page so `total`/pager state stay accurate
+            // (a plain local filter() leaves the pagination total stale).
+            await fetchListPage('jobs', setJobs, setJobsPagination, jobsPagination.page);
         } catch (err) { alert(err.message); }
     }
 
@@ -156,7 +204,9 @@ export default function AdminDashboard() {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
             if (!res.ok) throw new Error('Failed to delete message');
-            setMessages(messages.filter(m => m.messageid !== messageId));
+            // Refetch the current page so `total`/pager state stay accurate
+            // (a plain local filter() leaves the pagination total stale).
+            await fetchListPage('messages', setMessages, setMessagesPagination, messagesPagination.page);
         } catch (err) { alert(err.message); }
     }
 
@@ -210,6 +260,7 @@ export default function AdminDashboard() {
                         </tbody>
                     </table>
                 </div>
+                <Pager pagination={usersPagination} onPageChange={goToUsersPage} />
             </section>
 
             <section className="admin-users-section" style={{ marginTop: '3rem' }}>
@@ -242,6 +293,7 @@ export default function AdminDashboard() {
                         </tbody>
                     </table>
                 </div>
+                <Pager pagination={jobsPagination} onPageChange={goToJobsPage} />
             </section>
 
             <section className="admin-users-section" style={{ marginTop: '3rem' }}>
@@ -275,6 +327,7 @@ export default function AdminDashboard() {
                         </tbody>
                     </table>
                 </div>
+                <Pager pagination={contractsPagination} onPageChange={goToContractsPage} />
             </section>
 
             <section className="admin-users-section" style={{ marginTop: '3rem' }}>
@@ -305,8 +358,36 @@ export default function AdminDashboard() {
                         </tbody>
                     </table>
                 </div>
+                <Pager pagination={messagesPagination} onPageChange={goToMessagesPage} />
             </section>
 
+        </div>
+    );
+}
+
+function Pager({ pagination, onPageChange }) {
+    const { page, pageSize, total } = pagination;
+    const lastPage = Math.max(1, Math.ceil((total || 0) / (pageSize || 1)));
+    const isFirstPage = page <= 1;
+    const isLastPage = page >= lastPage;
+
+    return (
+        <div className="admin-pager">
+            <button
+                className="admin-btn-edit"
+                onClick={() => onPageChange(page - 1)}
+                disabled={isFirstPage}
+            >
+                Prev
+            </button>
+            <span className="admin-pager-status">Page {page} of {lastPage}</span>
+            <button
+                className="admin-btn-edit"
+                onClick={() => onPageChange(page + 1)}
+                disabled={isLastPage}
+            >
+                Next
+            </button>
         </div>
     );
 }

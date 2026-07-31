@@ -113,7 +113,7 @@ router.get('/', authMiddleware, async (req, res) => {
       const { data: appsData, error: appsErr } = await supabase
         .from('JobApplications')
         .select(`
-          ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter, Status,
+          ApplicationID, JobID, ProposalText, Experience, Timeline, CoverLetter, Status,
           Jobs(JobTitle),
           Freelancers(
             FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty),
@@ -133,7 +133,6 @@ router.get('/', authMiddleware, async (req, res) => {
     applicantAvatar: (a.Freelancers?.FirstName?.[0] || '') + (a.Freelancers?.LastName?.[0] || ''),
     rating: a.Freelancers?.FreelancerProfile?.Rating || 0,
     experience: a.Experience || 'Unknown',
-    proposedBudget: a.Rating || 0,
     timeline: a.Timeline || '',
     coverLetter: a.CoverLetter || '',
     portfolio: (a.Freelancers?.FreelancerSkills || a.FreelancerSkills || []).map(s => s.Skill),

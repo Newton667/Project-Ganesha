@@ -1,11 +1,6 @@
-const { createClient } = require('@supabase/supabase-js');
-
-// Use the SERVICE_ROLE_KEY here to ensure you can query the Admins table 
-// without being blocked by RLS
-const supabase = createClient(
-    process.env.SUPABASE_URL, 
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Uses the shared service-role client so queries can reach the Admins table
+// without being blocked by RLS.
+const supabase = require('../config/supabaseAdminClient');
 
 async function verifyAdmin(req, res, next) {
     try {

@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { createClient } = require('@supabase/supabase-js');
 const verifyAdmin = require('./adminAuth');
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = require('../config/supabaseAdminClient');
 
 // Protect all routes in this file with the adminAuth middleware
 router.use(verifyAdmin);
@@ -97,8 +95,12 @@ router.get('/messages', async (req, res) => {
 // ==============================
 router.put('/jobs/:id', async (req, res) => {
     try {
-        const { error } = await supabase.from('Jobs').update({ JobTitle: req.body.JobTitle }).eq('JobID', req.params.id);
-        if (error) throw error; 
+        const { JobTitle } = req.body;
+        if (typeof JobTitle !== 'string' || !JobTitle.trim()) {
+            return res.status(400).json({ error: 'JobTitle is required and must be a non-empty string' });
+        }
+        const { error } = await supabase.from('Jobs').update({ JobTitle: JobTitle.trim() }).eq('JobID', req.params.id);
+        if (error) throw error;
         res.json({ success: true });
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -122,7 +124,11 @@ router.put('/contracts/:id/revoke', async (req, res) => {
 
 router.put('/messages/:id', async (req, res) => {
     try {
-        const { error } = await supabase.from('Messages').update({ content: req.body.content }).eq('messageid', req.params.id);
+        const { content } = req.body;
+        if (typeof content !== 'string' || !content.trim()) {
+            return res.status(400).json({ error: 'content is required and must be a non-empty string' });
+        }
+        const { error } = await supabase.from('Messages').update({ content: content.trim() }).eq('messageid', req.params.id);
         if (error) throw error; res.json({ success: true });
     } catch (error) { res.status(500).json({ error: error.message }); }
 });

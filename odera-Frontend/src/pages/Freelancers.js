@@ -239,11 +239,27 @@ function Freelancers() {
     setShowNotifications(prev => !prev);
   };
 
-  const handleMarkMessageRead = (messageId) => {
-    // This is a mock-up. In a real app, you'd send a request to the backend.
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, unread: false } : msg
-    ));
+  const handleMarkMessageRead = async (messageId) => {
+    if (!session?.access_token) return;
+
+    try {
+      const res = await fetch(`/api/freelancerDashboard/read/${messageId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (!res.ok) throw new Error('Failed to update message status');
+
+      // Optimistic UI Update: update the local state immediately
+      setMessages(prev => prev.map(msg =>
+        msg.id === messageId ? { ...msg, unread: false } : msg
+      ));
+    } catch (err) {
+      console.error("Error marking message as read:", err);
+    }
   };
 
   const unreadMessages = useMemo(() => messages.filter(msg => msg.unread), [messages]);

@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient'; // Ensure this points to your frontend Supabase init
 import './AdminDashboard.css';
 
-// Fallback to localhost if the environment variable isn't set
-const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.REACT_APP_API_BASE || '';
 
 export default function AdminDashboard() {
     const [metrics, setMetrics] = useState(null);

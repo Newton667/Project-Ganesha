@@ -6,6 +6,7 @@ const router = express.Router();
 const dayjs = require('dayjs');
 const relativeTime = require('dayjs/plugin/relativeTime');
 dayjs.extend(relativeTime);
+const { getInboxForUser } = require('../config/messages');
 
 router.get('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;
@@ -141,51 +142,8 @@ router.get('/', authMiddleware, async (req, res) => {
   }));
 
 
-    // 4. Messages (Revised with your specific schema constraint names)
-    const { data: messagesData, error: msgErr } = await supabase
-      .from('Messages')
-      .select(`
-        messageid, 
-        senderid,
-        content, 
-        timestamp, 
-        isunread, 
-        type,
-        project:Jobs(JobTitle)
-      `)
-      .eq('receiverid', userId)
-      .order('timestamp', { ascending: false });
-
-    if (msgErr) throw msgErr;
-
-    // Fetch sender details manually since we dropped the direct FKs
-    const senderIds = [...new Set((messagesData || []).map(m => m.senderid))];
-    let sendersMap = {};
-
-    if (senderIds.length > 0) {
-      const { data: freelancers } = await supabase.from('Freelancers').select('FreelancerID, FirstName, LastName').in('FreelancerID', senderIds);
-      const { data: employers } = await supabase.from('Employers').select('EmployerID, FirstName, LastName').in('EmployerID', senderIds);
-
-      (freelancers || []).forEach(f => { sendersMap[f.FreelancerID] = f; });
-      (employers || []).forEach(e => { sendersMap[e.EmployerID] = e; });
-    }
-
-    const messages = (messagesData || []).map(m => {
-      const sender = sendersMap[m.senderid] || {};
-      const firstName = sender?.FirstName || 'Unknown';
-      const lastName = sender?.LastName || 'User';
-
-      return {
-        id: m.messageid,
-        from: `${firstName} ${lastName}`.trim(),
-        fromAvatar: firstName[0] + (lastName[0] || ''),
-        project: m.project?.JobTitle || 'General Inquiry',
-        message: m.content,
-        time: dayjs(m.timestamp).fromNow(),
-        unread: m.isunread,
-        type: m.type
-      };
-    });
+    // 4. Messages (fetched + enriched via the shared inbox helper)
+    const messages = await getInboxForUser(userId);
 
     // 5. Available developers
     // Pulls all freelancer profiles where availability is not 'Unavailable'
@@ -220,7 +178,7 @@ router.get('/', authMiddleware, async (req, res) => {
     res.json({
       userData,
       activeProjects,
-      messages: [],
+      messages,
       recentApplications,
       availableDevelopers
     });

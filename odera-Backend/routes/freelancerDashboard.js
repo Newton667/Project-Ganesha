@@ -6,6 +6,7 @@ const router = express.Router();
 const dayjs = require('dayjs');
 const relativeTime = require('dayjs/plugin/relativeTime');
 dayjs.extend(relativeTime);
+const { getInboxForUser } = require('../config/messages');
 
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
@@ -116,6 +117,14 @@ router.get('/', authMiddleware, async (req, res) => {
       urgency: j?.Urgency || 'medium',
     }));
 
+    // 5) Messages (tolerate failure so it can't blank the whole dashboard)
+    let messages = [];
+    try {
+      messages = await getInboxForUser(freelancerId);
+    } catch (msgErr) {
+      console.error('Messages err:', msgErr);
+    }
+
     // Final payload (always the same shape)
     res.json({
       userData: {
@@ -129,13 +138,29 @@ router.get('/', authMiddleware, async (req, res) => {
         availability: profileData?.Availability ?? 'Unavailable',
       },
       activeProjects,
-      messages: [],
+      messages,
       opportunities,
       earningsData,
     });
   } catch (err) {
     console.error('[freelancerDashboard] unhandled:', err);
     res.status(500).json({ error: 'Unhandled server error' });
+  }
+});
+
+// Mark a message as read
+router.patch('/read/:messageid', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('Messages')
+      .update({ isunread: false })
+      .eq('messageid', req.params.messageid)
+      .eq('receiverid', req.user.id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

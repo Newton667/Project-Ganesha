@@ -1,9 +1,0 @@
-git status
-
-git remote -v
-
-git add . (adds everything)
-
-git commit -m "Your commit message here"
-
-git push

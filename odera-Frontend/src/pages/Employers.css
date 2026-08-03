@@ -407,6 +407,26 @@ body {
   color: #1abc9c;
 }
 
+.btn-link:hover {
+  color: #1abc9c;
+}
+
+.btn-reject {
+  background-color: #e74c3c;;
+  color: white;
+  border: 1px solid #e74c3c;
+  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-reject:hover {
+  background-color: #9c4d44;
+  color: white;
+}
+
 /* Quick Actions Grid */
 .quick-actions-grid {
   display: grid;
@@ -743,6 +763,7 @@ body {
   justify-content: flex-end;
 }
 
+
 /* Messages Content */
 .messages-list {
   display: flex;
@@ -761,6 +782,20 @@ body {
 .message-item.unread {
   border-left: 4px solid #1abc9c;
   background-color: rgba(26, 188, 156, 0.05);
+}
+
+.message-item.unread-style {
+  background-color: #f0f7ff; /* Light blue tint */
+  border-left: 4px solid #007bff; /* Accent bar */
+}
+
+.nav-badge {
+  background-color: #ff4d4f;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  margin-left: 8px;
 }
 
 .message-header {
@@ -967,6 +1002,87 @@ body {
   gap: 0.5rem;
 }
 
+/* Confirmation Modal */
+.confirm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.confirm-modal {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.confirm-modal-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: bold;
+  margin: 0 auto 1.25rem;
+}
+
+.confirm-modal-icon.accept {
+  background-color: rgba(26, 188, 156, 0.15);
+  color: #1abc9c;
+  border: 2px solid #1abc9c;
+}
+
+.confirm-modal-icon.reject {
+  background-color: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+  border: 2px solid #e74c3c;
+}
+
+.confirm-modal h2 {
+  margin: 0 0 0.75rem;
+  font-size: 20px;
+  color: #fff;
+}
+
+.confirm-modal p {
+  margin: 0 0 1.75rem;
+  color: #bbb;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.confirm-modal-actions button {
+  min-width: 100px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .dashboard-header {
@@ -1059,4 +1175,93 @@ body {
     flex-direction: column;
     gap: 0.25rem;
   }
+}
+
+/* Add to Employers.css */
+.notification-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 10px); /* Position below the button with a small gap */
+  right: 0;
+  width: 350px;
+  background-color: #2a2a2a; /* Match card background */
+  border: 1px solid #444; /* Match card border */
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  color: #f5f5f5;
+  overflow: hidden;
+  animation: dropdown-fade-in 0.2s ease-out;
+}
+
+@keyframes dropdown-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notification-header {
+  padding: 1rem;
+  border-bottom: 1px solid #444;
+  background-color: #222; /* Slightly darker header */
+}
+
+.notification-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 1rem;
+  border-bottom: 1px solid #444;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background-color: #333;
+}
+
+.notification-item p {
+  margin: 0 0 0.25rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #ddd;
+}
+
+.notification-item-system {
+  background-color: rgba(76, 175, 80, 0.12);
+  border-left: 3px solid #4caf50;
+}
+
+.notification-item-system:hover {
+  background-color: rgba(76, 175, 80, 0.2);
+}
+
+.notification-type-icon {
+  margin-right: 0.15rem;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: #888; /* Softer color for time */
 }

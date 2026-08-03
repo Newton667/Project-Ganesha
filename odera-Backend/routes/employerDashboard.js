@@ -1,3 +1,4 @@
+// employerDashboard.js
 const supabase = require('../config/supabaseClient');
 const authMiddleware = require('../config/authMiddleware');
 const express = require('express');
@@ -5,6 +6,7 @@ const router = express.Router();
 const dayjs = require('dayjs');
 const relativeTime = require('dayjs/plugin/relativeTime');
 dayjs.extend(relativeTime);
+const { getInboxForUser } = require('../config/messages');
 
 router.get('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;
@@ -16,106 +18,131 @@ router.get('/', authMiddleware, async (req, res) => {
       .from('Employers')
       .select('EmployerID, CompanyName, EmployerProfiles(*)')
       .eq('EmployerID', userId)
-      .single();
+      .maybeSingle();
 
     if (empErr) throw empErr;
 
+    if (!employerData) {
+      return res.status(403).json({ error: 'Access denied: You do not have an employer account.' });
+    }
+
     const profile = employerData.EmployerProfiles?.[0] || {};
+
+    // 2. Jobs created by this employer
+    // Pulls jobs posted by this employer from the Jobs table.
+    const { data: jobs, error: jobsErr } = await supabase
+      .from('Jobs')
+      .select('JobID, JobTitle, BudgetMin, BudgetMax, Duration, JobCreated, FreelancerID')
+      .eq('EmployerID', employerData.EmployerID)
+      .order('JobCreated', { ascending: false });
+
+    if (jobsErr) {
+      console.error('Error fetching jobs:', jobsErr);
+      throw jobsErr;
+    }
+
+    // Calculate actual counts from jobs
+    const totalJobs = (jobs || []).length;
+    const openJobs = (jobs || []).filter(j => !j.FreelancerID).length;
+    const assignedJobs = (jobs || []).filter(j => j.FreelancerID).length;
 
     const userData = {
       companyName: employerData.CompanyName,
-      totalProjects: profile.TotalProjects || 0,
-      activeProjects: profile.ActiveProjects || 0,
-      completedProjects: profile.CompletedProjects || 0,
+      totalProjects: totalJobs,
+      activeProjects: openJobs,
+      completedProjects: assignedJobs,
       totalSpent: profile.TotalSpent || 0,
       avgProjectCost: profile.AvgProjectCost || 0,
       successRate: profile.SuccessRate || 0
     };
 
-    // 2. Active projects
-    // Pulls contracts for this employer from the Contracts table.
-    const { data: contracts, error: contractErr } = await supabase
-      .from('Contracts')
-      .select(`
-        ContractID, JobID, Progress, BudgetSpent, PricingMax, Status, LastUpdate,
-        Jobs(JobTitle, Duration),
-        Freelancers(FirstName, LastName),
-        ProjectMilestones(IsComplete)
-      `)
-      .eq('EmployerID', employerData.EmployerID);
+    // Get application counts for each job
+    const jobIds = (jobs || []).map(j => j.JobID);
+    let applicationCounts = {};
 
-    if (contractErr) throw contractErr;
+    if (jobIds.length > 0) {
+      const { data: appCounts, error: appCountErr } = await supabase
+        .from('JobApplications')
+        .select('JobID')
+        .in('JobID', jobIds);
 
-    const activeProjects = contracts.map(c => {
-      const milestones = c.ProjectMilestones || [];
-      const completed = milestones.filter(m => m.IsComplete).length;
+      if (!appCountErr && appCounts) {
+        // Count applications per job
+        appCounts.forEach(app => {
+          applicationCounts[app.JobID] = (applicationCounts[app.JobID] || 0) + 1;
+        });
+      }
+    }
+
+    // Fetch contracts for assigned jobs so we have ContractIDs
+    let contractsByJobId = {};
+    const assignedJobIds = (jobs || []).filter(j => j.FreelancerID).map(j => j.JobID);
+    if (assignedJobIds.length > 0) {
+      const { data: contracts } = await supabase
+        .from('Contracts')
+        .select('ContractID, JobID, Progress, Status')
+        .in('JobID', assignedJobIds);
+      (contracts || []).forEach(c => { contractsByJobId[c.JobID] = c; });
+    }
+
+    const activeProjects = (jobs || []).map(j => {
+      const applicationCount = applicationCounts[j.JobID] || 0;
+      const contract = contractsByJobId[j.JobID];
+      const status = contract?.Status || (j.FreelancerID ? 'Assigned' : 'Open');
       return {
-        id: c.ContractID,
-        title: c.Jobs?.JobTitle || 'Untitled Project',
-        developer: `${c.Freelancers?.FirstName || ''} ${c.Freelancers?.LastName || ''}`.trim(),
-        developerAvatar: (c.Freelancers?.FirstName?.[0] || '') + (c.Freelancers?.LastName?.[0] || ''),
-        budget: c.PricingMax || 0,
-        spent: c.BudgetSpent || 0,
-        progress: c.Progress || 0,
-        deadline: c.Jobs?.Duration || 'Unknown',
-        status: c.Status,
-        lastUpdate: dayjs(c.LastUpdate).fromNow(),
-        milestones: { completed, total: milestones.length },
-        skills: [] // Could join JobSkills table if needed
+        id: j.JobID,
+        contractId: contract?.ContractID || null,
+        title: j.JobTitle || 'Untitled Job',
+        developer: j.FreelancerID ? 'Hired' : 'No hire yet',
+        developerAvatar: j.FreelancerID ? '✓' : '📋',
+        budget: j.BudgetMax || j.BudgetMin || 0,
+        spent: 0,
+        progress: contract?.Progress || 0,
+        deadline: j.Duration || 'Not specified',
+        status: status,
+        lastUpdate: dayjs(j.JobCreated).fromNow(),
+        milestones: { completed: 0, total: applicationCount },
+        skills: []
       };
     });
 
     // 3. Recent applications
-    // Gets all applications for the jobs this employer owns.
-    const { data: applications, error: appsErr } = await supabase
-      .from('JobApplications')
-      .select(`
-        ApplicationID, JobID, ProposalText, Experience, Timeline, Rating, CoverLetter,
-        Jobs(JobTitle),
-        Freelancers(FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty)),
-        FreelancerSkills(Skill)
-      `)
-      .in('JobID', contracts.map(c => c.JobID));
+    // Gets all applications for the jobs this employer posted.
+    let applications = [];
+    if (jobs && jobs.length > 0) {
+      const { data: appsData, error: appsErr } = await supabase
+        .from('JobApplications')
+        .select(`
+          ApplicationID, JobID, ProposalText, Experience, Timeline, CoverLetter, Status,
+          Jobs(JobTitle),
+          Freelancers(
+            FirstName, LastName, FreelancerProfile(Rating, CompletedProjects, HourlyRate, Specialty),
+            FreelancerSkills(Skill)
+          )
+        `)
+        .in('JobID', jobs.map(j => j.JobID));
 
-    if (appsErr) throw appsErr;
+      if (appsErr) throw appsErr;
+      applications = appsData || [];
+    }
 
-    const recentApplications = applications.map(a => ({
-      id: a.ApplicationID,
-      projectTitle: a.Jobs?.JobTitle || '',
-      applicant: `${a.Freelancers?.FirstName || ''} ${a.Freelancers?.LastName || ''}`.trim(),
-      applicantAvatar: (a.Freelancers?.FirstName?.[0] || '') + (a.Freelancers?.LastName?.[0] || ''),
-      rating: a.Freelancers?.FreelancerProfile?.Rating || 0,
-      experience: a.Experience || 'Unknown',
-      proposedBudget: a.Rating || 0,
-      timeline: a.Timeline || '',
-      coverLetter: a.CoverLetter || '',
-      portfolio: (a.FreelancerSkills || []).map(s => s.Skill),
-      appliedTime: 'N/A' // Would require an application timestamp column
-    }));
+  const recentApplications = applications.map(a => ({
+    id: a.ApplicationID,
+    projectTitle: a.Jobs?.JobTitle || '',
+    applicant: `${a.Freelancers?.FirstName || ''} ${a.Freelancers?.LastName || ''}`.trim(),
+    applicantAvatar: (a.Freelancers?.FirstName?.[0] || '') + (a.Freelancers?.LastName?.[0] || ''),
+    rating: a.Freelancers?.FreelancerProfile?.Rating || 0,
+    experience: a.Experience || 'Unknown',
+    timeline: a.Timeline || '',
+    coverLetter: a.CoverLetter || '',
+    portfolio: (a.Freelancers?.FreelancerSkills || a.FreelancerSkills || []).map(s => s.Skill),
+    appliedTime: 'N/A', // Would require an application timestamp column
+    status: a.Status || 'Pending Review'
+  }));
 
-    // 4. Messages
-    /*
-    const { data: messagesData, error: msgErr } = await supabase
-      .from('Messages')
-      .select(`
-        messageid, senderid, projectid, content, timestamp, isunread, type,
-        sender:auth.users(full_name)
-      `)
-      .eq('receiverid', userId);
 
-    if (msgErr) throw msgErr;
-
-    const messages = messagesData.map(m => ({
-      id: m.messageid,
-      from: m.sender?.full_name || 'Unknown',
-      fromAvatar: (m.sender?.full_name?.split(' ')[0]?.[0] || '') + (m.sender?.full_name?.split(' ')[1]?.[0] || ''),
-      project: '', // Need join to Jobs or Contracts for name
-      message: m.content,
-      time: dayjs(m.timestamp).fromNow(),
-      unread: m.isunread,
-      type: m.type
-    }));
-    */
+    // 4. Messages (fetched + enriched via the shared inbox helper)
+    const messages = await getInboxForUser(userId);
 
     // 5. Available developers
     // Pulls all freelancer profiles where availability is not 'Unavailable'
@@ -123,8 +150,7 @@ router.get('/', authMiddleware, async (req, res) => {
       .from('FreelancerProfile')
       .select(`
         FreelancerID, Organization, Availability, Rating, CompletedProjects, HourlyRate, Specialty, LastActive, ResponseTime, SuccessRate, Year, School,
-        Freelancers(FirstName, LastName),
-        FreelancerSkills(Skill)
+        Freelancers(FirstName, LastName, FreelancerSkills(Skill))
       `)
       .neq('Availability', 'Unavailable');
 
@@ -139,7 +165,7 @@ router.get('/', authMiddleware, async (req, res) => {
       rating: d.Rating || 0,
       completedProjects: d.CompletedProjects || 0,
       hourlyRate: d.HourlyRate || 0,
-      skills: (d.FreelancerSkills || []).map(s => s.Skill),
+      skills: (d.Freelancers?.FreelancerSkills || d.FreelancerSkills || []).map(s => s.Skill),
       specialty: d.Specialty || '',
       availability: d.Availability || '',
       lastActive: dayjs(d.LastActive).fromNow(),
@@ -151,11 +177,27 @@ router.get('/', authMiddleware, async (req, res) => {
     res.json({
       userData,
       activeProjects,
-      messages: [],
+      messages,
       recentApplications,
       availableDevelopers
     });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark a message as read
+router.patch('/read/:messageid', authMiddleware, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('Messages')
+      .update({ isunread: false })
+      .eq('messageid', req.params.messageid)
+      .eq('receiverid', req.user.id); 
+
+    if (error) throw error;
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -1,78 +1,118 @@
-import { createContext, useEffect, useState, useContext } from "react";
-import { supabase } from '../supabaseClient';
+// src/context/AuthContext.js
+import { createContext, useEffect, useMemo, useState, useContext } from "react";
+import { supabase } from "../supabaseClient";
 
-const AuthContext = createContext();
+const AuthContext = createContext({
+  session: null,
+  user: null,
+  accessToken: null,
+  loading: true,
+  signUpNewUser: async () => ({ success: false }),
+  signInUser: async () => ({ success: false }),
+  signOut: async () => ({ success: false }),
+});
 
-export const AuthContextProvider = ({children}) => {
-    const [session, setSession] = useState(undefined)
+export const AuthContextProvider = ({ children }) => {
+  // Start as loading=true so UI can avoid flicker
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    // Sign up 
-    const signUpNewUser = async (email, password, firstName, lastName) => {
-        const {data, error} = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: {
-                    firstName: firstName,
-                    lastName: lastName,
-                }
-            }
-        });
-
-        if (error) {
-            console.error("there was a problem signing up: ", error);
-            return { success: false, error }
-        }
-        // Session returned to allow writing to DB using session key
-        return { success: true, data, session: data.session, user: data.user }
+  // ---------- Auth actions ----------
+  const signUpNewUser = async (email, password, firstName, lastName) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { firstName, lastName },
+          // send email confirmation? uncomment if needed
+          // emailRedirectTo: `${window.location.origin}/login`
+        },
+      });
+      if (error) return { success: false, error };
+      return { success: true, data, session: data.session, user: data.user };
+    } catch (error) {
+      console.error("[Auth] signUp error:", error);
+      return { success: false, error };
     }
+  };
 
-    // Sign in
-    const signInUser = async (email, password) => {
-        try {
-            const {data, error} = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-            if (error) {
-                console.error("there was a problem: ", error);
-                return {success: false, error: error.message}
-            }
-            console.log('Successful sign-in: ', data);
-            return {success: true, data}
-        } catch(error) {
-
-        }
+  const signInUser = async (email, password) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) return { success: false, error };
+      return { success: true, data };
+    } catch (error) {
+      console.error("[Auth] signIn error:", error);
+      return { success: false, error };
     }
+  };
 
-    // Stater updater
-    useEffect(() => {
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) return { success: false, error };
+      return { success: true };
+    } catch (error) {
+      console.error("[Auth] signOut error:", error);
+      return { success: false, error };
+    }
+  };
 
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-        });
+  // ---------- Session bootstrap & subscription ----------
+  useEffect(() => {
+    let isMounted = true;
 
-        supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-        });
-
-    },[])
-
-    // Sign out
-    const signOut = () => {
-        const { error } = supabase.auth.signOut();
+    const bootstrap = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
         if (error) {
-            console.error("there was a problem: ", error);
+          console.error("[Auth] getSession error:", error);
         }
+        if (!isMounted) return;
+        setSession(data?.session ?? null);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     };
 
-    return(
-        <AuthContext.Provider value={{session, signUpNewUser, signInUser, signOut}}>
-            {children}
-        </AuthContext.Provider>
-    )
-}
+    // initial load
+    bootstrap();
 
-export const UserAuth = () => {
-    return useContext(AuthContext);
-}
+    // subscribe to auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession ?? null);
+      // once we hear anything from supabase, we can consider loading false
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      listener?.subscription?.unsubscribe?.();
+    };
+  }, []);
+
+  // ---------- Derived values ----------
+  const user = session?.user ?? null;
+  const accessToken = session?.access_token ?? null;
+
+  const value = useMemo(
+    () => ({
+      session,
+      user,
+      accessToken,
+      loading,
+      signUpNewUser,
+      signInUser,
+      signOut,
+    }),
+    [session, user, accessToken, loading]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const UserAuth = () => useContext(AuthContext);

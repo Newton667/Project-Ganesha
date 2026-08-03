@@ -1,2 +1,11 @@
 odera-Frontend/.env
-odera-Frontend/.env
+odera-Frontend/git.txt
+.claude/
+.env.test
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.playwright-mcp/

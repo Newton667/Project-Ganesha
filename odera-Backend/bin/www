@@ -88,4 +88,9 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
   console.log(`Server started at ${bind}`);
+
+  // Clear, visible startup message
+  console.log('========================================');
+  console.log(`🚀 Express server is running at: http://localhost:${addr.port}`);
+  console.log('========================================');
 }
